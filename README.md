@@ -55,11 +55,11 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 ### Structure
 
-In our configuration file, we have two main sections:
+In our configuration file, we have three main sections:
 
 - `forgejo`: Forgejo instance configuration
 - `expressions`: Regular expressions to match against
-<!-- - `telegram`: Telegram bot configuration -->
+- `telegram`: Telegram bot configuration
 
 #### `forgejo`
 
@@ -70,7 +70,7 @@ Forgejo configuration section, with the following fields:
 
 ```toml
 [forgejo]
-instance_url = "https://forgejo.example
+instance_url = "https://forgejo.example"
 token = "your-token"
 ```
 
@@ -98,3 +98,35 @@ usernames = ['^admin.*$']
 usernames = ['^mod.*$']
 ```
 
+#### `telegram`
+
+Telegram bot configuration section, with the following fields:
+
+- `token`: Telegram bot token
+- `chat`: Chat ID to send the alerts to (Can be a group or a channel or a user)
+- `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and `ru-ru` are supported)
+
+```toml
+[telegram]
+token = "your-token"
+chat = 00000000000
+lang = "en-us"
+```
+
+## Running the guardian
+
+After you have the configuration file ready, you can run the guardian with the following command:
+
+```sh
+FORGEJO_GUARDIAN_CONFIG=/path/to/your/config.toml forgejo-guardian
+```
+
+You can remove the `FORGEJO_GUARDIAN_CONFIG` environment variable from the command if it's already set, or the file in the default location `/app/forgejo-guardian.toml`.
+
+### Adding a new language
+
+If you would like to contribute by adding a new language, you can do that by adding your language file in the `locales` directory, and then add it to `Lang` enum in `src/telegram_bot/mod.rs` file. Then you can use it in the configuration file.
+
+## License
+
+This project is licensed under the [AGPL-3.0-or-later](https://www.gnu.org/licenses/agpl-3.0.html) license.
