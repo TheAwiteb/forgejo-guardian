@@ -36,6 +36,7 @@ use crate::{config::Config, forgejo_api::ForgejoUser};
 pub enum Lang {
     EnUs,
     ArSa,
+    RuRu,
 }
 
 impl Lang {
@@ -44,6 +45,7 @@ impl Lang {
         match self {
             Lang::EnUs => "en-us",
             Lang::ArSa => "ar-sa",
+            Lang::RuRu => "ru-ru",
         }
     }
 }
