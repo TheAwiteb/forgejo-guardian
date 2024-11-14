@@ -32,7 +32,8 @@ use crate::{
     traits::ExprChecker,
 };
 
-/// Get the new instance users, the vector may be empty if there are no new users
+/// Get the new instance users, the vector may be empty if there are no new
+/// users
 ///
 /// Forgejo use intger ids for the users, so we can use the last user id to get
 /// the new users.
