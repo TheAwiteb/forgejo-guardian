@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://gnu.org/licenses/agpl.txt>.
 
+#[macro_use]
+extern crate rust_i18n;
+
 use std::{process::ExitCode, sync::Arc, time::Duration};
 
 use tokio::{signal::ctrl_c, sync};
@@ -22,19 +25,24 @@ use tokio_util::sync::CancellationToken;
 pub mod config;
 pub mod error;
 pub mod forgejo_api;
+pub mod telegram_bot;
 pub mod traits;
 pub mod users_fetcher;
 pub mod utils;
+
+i18n!("locales", fallback = "en-us");
 
 async fn try_main() -> error::GuardResult<()> {
     let config = Arc::new(utils::get_config()?);
     let cancellation_token = CancellationToken::new();
     // Suspicious users are sent and received in this channel, users who meet the
     // `alert` expressions
-    let (sus_sender, _sus_receiver) = sync::mpsc::channel::<forgejo_api::ForgejoUser>(100);
+    let (sus_sender, sus_receiver) = sync::mpsc::channel::<forgejo_api::ForgejoUser>(100);
 
     tracing::info!("The instance: {}", config.forgejo.instance);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
+
+    rust_i18n::set_locale(config.telegram.lang.as_str());
 
     tokio::spawn(users_fetcher::users_fetcher(
         Arc::clone(&config),
@@ -42,7 +50,11 @@ async fn try_main() -> error::GuardResult<()> {
         sus_sender.clone(),
     ));
 
-    // TODO: Sus worker, who will receive sus users
+    tokio::spawn(telegram_bot::start_bot(
+        Arc::clone(&config),
+        cancellation_token.clone(),
+        sus_receiver,
+    ));
 
     tokio::select! {
         _ = ctrl_c() => {

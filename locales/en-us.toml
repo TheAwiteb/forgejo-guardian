@@ -1,0 +1,22 @@
+[messages]
+help_start = "Hi, I'm forgejo-guardian, I'll send you a notification about suspicious users, and I'll wait for your approval or rejection to ban them.\n\nMy source code: https://git.4rs.nl/awiteb/forgejo-guardian"
+sus_alert = """Suspicious user detected! 🚨
+• User ID: %{user_id}
+• Username: %{username}
+• Full name: %{full_name}
+• Bio: %{bio}
+• Website: %{website}
+• Profile: %{profile}
+
+Do you want to ban this user?
+"""
+ban_success = "User has been banned successfully ⛔"
+ban_failed = "Failed to ban the user! ⚠️"
+ban_denied = "User has been ignored ⚠️"
+
+[words]
+not_found = "Not found"
+
+[buttons]
+ban    = "Ban ⛔"
+ignore = "Ignore ⚠️"
