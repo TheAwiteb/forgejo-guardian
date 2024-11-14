@@ -21,7 +21,10 @@ pub(crate) const DEFAULT_CONFIG_PATH: &str = "/app/forgejo-guardian.toml";
 
 use regex::Regex;
 use serde::{de, Deserialize};
+use teloxide::types::ChatId;
 use url::Url;
+
+use crate::telegram_bot::Lang;
 
 /// Deserialize a string into a `url::Url`
 ///
@@ -62,6 +65,17 @@ pub struct Forgejo {
     /// The instance, e.g. `https://example.com` or `https://example.com/` or `http://example.com:8080`
     #[serde(rename = "instance_url", deserialize_with = "deserialize_str_url")]
     pub instance: Url,
+}
+
+/// The telegram bot configuration
+#[derive(Deserialize)]
+pub struct Telegram {
+    /// Telegram bot token
+    pub token: String,
+    /// Chat to send the alert in
+    pub chat:  ChatId,
+    /// Bot language
+    pub lang:  Lang,
 }
 
 /// The expression
@@ -126,6 +140,8 @@ pub struct Exprs {
 pub struct Config {
     /// Configuration for the forgejo guard itself
     pub forgejo:     Forgejo,
+    /// Configuration of the telegram bot
+    pub telegram:    Telegram,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
     pub expressions: Exprs,
