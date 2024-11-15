@@ -26,7 +26,11 @@ pub trait ExprChecker {
 
 impl ExprChecker for Expr {
     fn is_match<'a>(&'a self, user: &ForgejoUser) -> Option<Regex> {
-        let one_of = |hay, exprs: &'a Vec<Regex>| exprs.iter().find(|re| re.is_match(hay));
+        let one_of = |hay: &str, exprs: &'a Vec<Regex>| {
+            exprs
+                .iter()
+                .find(|re| hay.split('\n').any(|line| re.is_match(line.trim())))
+        };
         [
             one_of(&user.username, &self.usernames),
             one_of(&user.full_name, &self.full_names),
