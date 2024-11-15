@@ -55,11 +55,17 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 ### Structure
 
-In our configuration file, we have three main sections:
+In our configuration file you can have the following sections and the global sections:
 
 - `forgejo`: Forgejo instance configuration
 - `expressions`: Regular expressions to match against
 - `telegram`: Telegram bot configuration
+
+#### Global sections
+
+The global section is the one that doesn't have a name, and it's in the top of the configuration file, with the following fields:
+
+- `dry_run`: If set to `true`, the guardian will not ban the users, but will only alert the admins (default: `false`)
 
 #### `forgejo`
 
@@ -104,6 +110,7 @@ Telegram bot configuration section, with the following fields:
 
 - `token`: Telegram bot token
 - `chat`: Chat ID to send the alerts to (Can be a group or a channel or a user)
+- `ban_alert`: Send a notification when a user is banned (default: `false`)
 - `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and `ru-ru` are supported)
 
 ```toml
