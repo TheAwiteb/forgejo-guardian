@@ -48,6 +48,20 @@ fn not_found_if_empty(text: &str) -> Cow<'_, str> {
     }
 }
 
+/// Generate a user details message
+fn user_details(msg: &str, user: &ForgejoUser) -> String {
+    t!(
+        msg,
+        user_id = user.id,
+        username = user.username,
+        full_name = not_found_if_empty(&user.full_name),
+        bio = not_found_if_empty(&user.biography),
+        website = not_found_if_empty(&user.website),
+        profile = user.html_url,
+    )
+    .to_string()
+}
+
 /// Send a suspicious user alert to the admins
 pub async fn send_sus_alert(
     bot: &Bot,
@@ -56,33 +70,44 @@ pub async fn send_sus_alert(
 ) -> ResponseResult<()> {
     let keyboard = make_sus_inline_keyboard(&sus_user);
 
+    let caption = user_details("messages.sus_alert", &sus_user);
     bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
-        .caption(t!(
-            "messages.sus_alert",
-            user_id = sus_user.id,
-            username = sus_user.username,
-            full_name = not_found_if_empty(&sus_user.full_name),
-            bio = not_found_if_empty(&sus_user.biography),
-            website = not_found_if_empty(&sus_user.website),
-            profile = sus_user.html_url,
-        ))
+        .caption(caption)
         .reply_markup(keyboard)
         .await?;
 
     Ok(())
 }
 
-/// Handle the suspicious users
-pub async fn sus_users_handler(
+/// Send a ban notification to the admins chat
+pub async fn send_ban_notify(
+    bot: &Bot,
+    sus_user: ForgejoUser,
+    config: &Config,
+) -> ResponseResult<()> {
+    let caption = user_details("messages.ban_notify", &sus_user);
+    bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
+        .caption(caption)
+        .await?;
+
+    Ok(())
+}
+
+/// Handle the suspicious and banned users
+pub async fn users_handler(
     bot: Bot,
     config: Arc<Config>,
     cancellation_token: CancellationToken,
     mut sus_receiver: Receiver<ForgejoUser>,
+    mut ban_receiver: Receiver<ForgejoUser>,
 ) {
     loop {
         tokio::select! {
             Some(sus_user) = sus_receiver.recv() => {
                 send_sus_alert(&bot, sus_user, &config).await.ok();
+            }
+            Some(banned_user) = ban_receiver.recv() => {
+                send_ban_notify(&bot, banned_user, &config).await.ok();
             }
             _ = cancellation_token.cancelled() => {
                 tracing::info!("sus users handler has been stopped successfully.");

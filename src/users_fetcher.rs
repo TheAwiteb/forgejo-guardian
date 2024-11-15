@@ -59,10 +59,13 @@ async fn check_new_user(
     request_client: &reqwest::Client,
     config: &Config,
     sus_sender: &Sender<ForgejoUser>,
+    ban_sender: &Sender<ForgejoUser>,
 ) {
     if let Some(re) = config.expressions.ban.is_match(&user) {
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
+            // If it's a dry run, we don't need to ban the user
+            ban_sender.send(user).await.ok();
             return;
         }
 
@@ -75,10 +78,12 @@ async fn check_new_user(
         .await
         {
             tracing::error!("Error while banning a user: {err}");
+        } else {
+            ban_sender.send(user).await.ok();
         }
     } else if let Some(re) = config.expressions.sus.is_match(&user) {
         tracing::info!("@{} has been suspected because `{re}`", user.username);
-        let _ = sus_sender.send(user).await;
+        sus_sender.send(user).await.ok();
     }
 }
 
@@ -86,9 +91,10 @@ async fn check_new_user(
 /// banned users
 async fn check_new_users(
     last_user_id: Arc<AtomicUsize>,
-    sus_sender: Sender<ForgejoUser>,
     request_client: Arc<reqwest::Client>,
     config: Arc<Config>,
+    sus_sender: Sender<ForgejoUser>,
+    ban_sender: Sender<ForgejoUser>,
 ) {
     match get_new_users(
         &request_client,
@@ -108,7 +114,7 @@ async fn check_new_users(
             }
 
             for user in new_users {
-                check_new_user(user, &request_client, &config, &sus_sender).await;
+                check_new_user(user, &request_client, &config, &sus_sender, &ban_sender).await;
             }
         }
         Err(err) => {
@@ -123,6 +129,7 @@ pub async fn users_fetcher(
     config: Arc<Config>,
     cancellation_token: CancellationToken,
     sus_sender: Sender<ForgejoUser>,
+    ban_sender: Sender<ForgejoUser>,
 ) {
     let last_user_id = Arc::new(AtomicUsize::new(0));
     let request_client = Arc::new(reqwest::Client::new());
@@ -130,12 +137,13 @@ pub async fn users_fetcher(
     tracing::info!("Starting users fetcher");
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(120)) => {
+            _ = tokio::time::sleep(Duration::from_secs(20)) => {
                 tokio::spawn(check_new_users(
                     Arc::clone(&last_user_id),
-                    sus_sender.clone(),
                     Arc::clone(&request_client),
                     Arc::clone(&config),
+                    sus_sender.clone(),
+                    ban_sender.clone(),
                 ));
             }
             _ = cancellation_token.cancelled() => {

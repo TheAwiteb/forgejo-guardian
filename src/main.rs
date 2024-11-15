@@ -38,6 +38,9 @@ async fn try_main() -> error::GuardResult<()> {
     // Suspicious users are sent and received in this channel, users who meet the
     // `alert` expressions
     let (sus_sender, sus_receiver) = sync::mpsc::channel::<forgejo_api::ForgejoUser>(100);
+    // Banned users (already banned) are sent and received in this channel, this
+    // to alert the admins on Telegram if `ban_alert` is set to true
+    let (ban_sender, ban_receiver) = sync::mpsc::channel::<forgejo_api::ForgejoUser>(100);
 
     tracing::info!("The instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
@@ -48,13 +51,15 @@ async fn try_main() -> error::GuardResult<()> {
     tokio::spawn(users_fetcher::users_fetcher(
         Arc::clone(&config),
         cancellation_token.clone(),
-        sus_sender.clone(),
+        sus_sender,
+        ban_sender,
     ));
 
     tokio::spawn(telegram_bot::start_bot(
         Arc::clone(&config),
         cancellation_token.clone(),
         sus_receiver,
+        ban_receiver,
     ));
 
     tokio::select! {

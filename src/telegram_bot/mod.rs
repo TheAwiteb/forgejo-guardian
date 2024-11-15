@@ -18,7 +18,7 @@
 
 mod callback_handler;
 mod message_handler;
-mod sus_handler;
+mod users_handler;
 
 use std::sync::Arc;
 
@@ -55,6 +55,7 @@ pub async fn start_bot(
     config: Arc<Config>,
     cancellation_token: CancellationToken,
     sus_receiver: Receiver<ForgejoUser>,
+    ban_receiver: Receiver<ForgejoUser>,
 ) {
     tracing::info!("Starting the telegram bot");
 
@@ -66,11 +67,12 @@ pub async fn start_bot(
         )
         .branch(Update::filter_callback_query().endpoint(callback_handler));
 
-    tokio::spawn(sus_handler::sus_users_handler(
+    tokio::spawn(users_handler::users_handler(
         bot.clone(),
         Arc::clone(&config),
         cancellation_token,
         sus_receiver,
+        ban_receiver,
     ));
 
     Dispatcher::builder(bot, handler)

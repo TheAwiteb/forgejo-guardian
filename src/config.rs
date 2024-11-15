@@ -71,11 +71,14 @@ pub struct Forgejo {
 #[derive(Deserialize)]
 pub struct Telegram {
     /// Telegram bot token
-    pub token: String,
+    pub token:     String,
     /// Chat to send the alert in
-    pub chat:  ChatId,
+    pub chat:      ChatId,
+    /// Send an alert when ban a user
+    #[serde(default)]
+    pub ban_alert: bool,
     /// Bot language
-    pub lang:  Lang,
+    pub lang:      Lang,
 }
 
 /// The expression
