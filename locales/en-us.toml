@@ -10,6 +10,14 @@ sus_alert = """Suspicious user detected! 🚨
 
 Do you want to ban this user?
 """
+ban_notify = """User has been banned ⛔
+• User ID: %{user_id}
+• Username: %{username}
+• Full name: %{full_name}
+• Bio: %{bio}
+• Website: %{website}
+• Profile: %{profile}
+"""
 ban_success = "User has been banned successfully ⛔"
 ban_failed = "Failed to ban the user! ⚠️"
 ban_denied = "User has been ignored ⚠️"
