@@ -30,7 +30,8 @@ use teloxide::{
 
 use crate::{config::Config, forgejo_api};
 
-/// Inline keyboard with a single button that links to the Forgejo Guardian repository.
+/// Inline keyboard with a single button that links to the Forgejo Guardian
+/// repository.
 fn source_inline_keyboard(text: &str) -> InlineKeyboardMarkup {
     InlineKeyboardMarkup::new([[InlineKeyboardButton::new(
         text,
@@ -58,15 +59,17 @@ pub async fn callback_handler(
     match command {
         "b" => {
             // ban the user
-            let button_text = if forgejo_api::ban_user(
-                &Client::new(),
-                &config.forgejo.instance,
-                &config.forgejo.token,
-                data,
-            )
-            .await
-            .is_ok()
+            let button_text = if config.dry_run
+                || forgejo_api::ban_user(
+                    &Client::new(),
+                    &config.forgejo.instance,
+                    &config.forgejo.token,
+                    data,
+                )
+                .await
+                .is_ok()
             {
+                tracing::info!("Suspicious user @{data} has been banned");
                 t!("messages.ban_success")
             } else {
                 t!("messages.ban_failed")

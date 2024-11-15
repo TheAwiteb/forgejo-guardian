@@ -40,6 +40,7 @@ async fn try_main() -> error::GuardResult<()> {
     let (sus_sender, sus_receiver) = sync::mpsc::channel::<forgejo_api::ForgejoUser>(100);
 
     tracing::info!("The instance: {}", config.forgejo.instance);
+    tracing::info!("Dry run: {}", config.dry_run);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
 
     rust_i18n::set_locale(config.telegram.lang.as_str());

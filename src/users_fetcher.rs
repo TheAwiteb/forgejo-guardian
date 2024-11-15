@@ -62,6 +62,10 @@ async fn check_new_user(
 ) {
     if let Some(re) = config.expressions.ban.is_match(&user) {
         tracing::info!("@{} has been banned because `{re}`", user.username);
+        if config.dry_run {
+            return;
+        }
+
         if let Err(err) = forgejo_api::ban_user(
             request_client,
             &config.forgejo.instance,

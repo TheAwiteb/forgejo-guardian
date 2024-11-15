@@ -138,6 +138,9 @@ pub struct Exprs {
 /// forgejo-guard configuration
 #[derive(Deserialize)]
 pub struct Config {
+    /// Dry run, without banning the users
+    #[serde(default)]
+    pub dry_run:     bool,
     /// Configuration for the forgejo guard itself
     pub forgejo:     Forgejo,
     /// Configuration of the telegram bot
