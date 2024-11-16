@@ -21,7 +21,7 @@ You can let [cargo](https://doc.rust-lang.org/cargo/) build the binary for you, 
 
 > [!TIP]
 > This will install the binary in `~/.cargo/bin/forgejo-guardian`. Make sure to add this directory to your `PATH`.
-> If you want to update it, run `cargo install ...` again.
+> If you want to update it, rerun the command.
 
 ```sh
 cargo install --git https://git.4rs.nl/awiteb/forgejo-guardian
@@ -55,17 +55,18 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 ### Structure
 
-In our configuration file you can have the following sections and the global sections:
+In our configuration file you can have the following sections and the global section:
 
 - `forgejo`: Forgejo instance configuration
 - `expressions`: Regular expressions to match against
 - `telegram`: Telegram bot configuration
 
-#### Global sections
+#### Global section
 
 The global section is the one that doesn't have a name, and it's in the top of the configuration file, with the following fields:
 
 - `dry_run`: If set to `true`, the guardian will not ban the users, but will only alert the admins (default: `false`)
+- `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
 
 #### `forgejo`
 
