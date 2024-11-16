@@ -98,6 +98,7 @@ async fn check_new_users(
     sus_sender: Sender<ForgejoUser>,
     ban_sender: Sender<ForgejoUser>,
 ) {
+    let is_first_fetch = last_user_id.load(Ordering::Relaxed) == 0;
     match get_new_users(
         &request_client,
         last_user_id.load(Ordering::Relaxed),
@@ -112,7 +113,11 @@ async fn check_new_users(
 
             if let Some(uid) = new_users.iter().max_by_key(|u| u.id).map(|u| u.id) {
                 tracing::debug!("New last user id: {uid}");
-                last_user_id.store(uid, Ordering::Relaxed)
+                last_user_id.store(uid, Ordering::Relaxed);
+            }
+
+            if config.only_new_users && is_first_fetch {
+                return;
             }
 
             for user in new_users {

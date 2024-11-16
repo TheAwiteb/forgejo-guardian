@@ -143,12 +143,15 @@ pub struct Exprs {
 pub struct Config {
     /// Dry run, without banning the users
     #[serde(default)]
-    pub dry_run:     bool,
+    pub dry_run:        bool,
+    /// Only checks new users
+    #[serde(default)]
+    pub only_new_users: bool,
     /// Configuration for the forgejo guard itself
-    pub forgejo:     Forgejo,
+    pub forgejo:        Forgejo,
     /// Configuration of the telegram bot
-    pub telegram:    Telegram,
+    pub telegram:       Telegram,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
-    pub expressions: Exprs,
+    pub expressions:    Exprs,
 }
