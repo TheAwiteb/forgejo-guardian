@@ -65,7 +65,9 @@ async fn check_new_user(
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
-            ban_sender.send(user).await.ok();
+            if config.telegram.ban_alert {
+                ban_sender.send(user).await.ok();
+            }
             return;
         }
 
@@ -78,7 +80,7 @@ async fn check_new_user(
         .await
         {
             tracing::error!("Error while banning a user: {err}");
-        } else {
+        } else if config.telegram.ban_alert {
             ban_sender.send(user).await.ok();
         }
     } else if let Some(re) = config.expressions.sus.is_match(&user) {
@@ -137,7 +139,7 @@ pub async fn users_fetcher(
     tracing::info!("Starting users fetcher");
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(20)) => {
+            _ = tokio::time::sleep(Duration::from_secs(120)) => {
                 tokio::spawn(check_new_users(
                     Arc::clone(&last_user_id),
                     Arc::clone(&request_client),
