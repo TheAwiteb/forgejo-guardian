@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## unreleased
+## 0.1.0 - 2024-11-16
 ### Added
 -  Add Russian language ([`8dc8c0d`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/8dc8c0d2315d7d47f6f2605fcdfd62499a4c4460))
 -  Add telegram bot to the config ([`68cd88e`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/68cd88e96af0cd92c10e30ec9675f003c89c436f))
