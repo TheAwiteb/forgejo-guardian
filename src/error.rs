@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://gnu.org/licenses/agpl.txt>.
 
+use reqwest::StatusCode;
+
 use crate::config::{CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH};
 
 /// Result of the guard
@@ -39,4 +41,7 @@ pub enum GuardError {
     /// Faild to deserialize the config file
     #[error("Failed to deserialize the config: {0}")]
     FaildDeserializeConfig(#[from] toml::de::Error),
+    /// Failed to ban the user
+    #[error("Failed to ban the user, status code: {0}")]
+    FailedToBan(StatusCode),
 }

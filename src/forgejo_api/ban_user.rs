@@ -16,7 +16,7 @@
 
 use reqwest::Method;
 
-use crate::error::GuardResult;
+use crate::error::{GuardError, GuardResult};
 
 /// Ban a user from the instance, purging their data.
 pub async fn ban_user(
@@ -34,7 +34,10 @@ pub async fn ban_user(
         ))
         .await?;
     tracing::debug!("Ban user response: {:?}", &res);
-    tracing::debug!("Body: {}", res.text().await.unwrap_or_default());
+
+    if !res.status().is_success() {
+        return Err(GuardError::FailedToBan(res.status()));
+    }
 
     Ok(())
 }
