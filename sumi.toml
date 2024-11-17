@@ -50,7 +50,19 @@ scopes_allowed = []
 
 # Rule: List of allowed commit types.
 # An empty list allows all types. Example: ["feat", "fix", "docs"].
-types_allowed = ["feat", "fix", "docs", "refactor", "change", "deprecate", "remove", "security", "perf", "test", "chore"]
+types_allowed = [
+  "feat",
+  "fix",
+  "docs",
+  "refactor",
+  "change",
+  "deprecate",
+  "remove",
+  "security",
+  "perf",
+  "test",
+  "chore",
+]
 
 # Rule: Header must match regex pattern.
 # Example: '^JIRA-\d+:'.

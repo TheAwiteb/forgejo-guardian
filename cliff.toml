@@ -64,10 +64,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n
 """
 postprocessors = [
-  {pattern = '<REPO>', replace = "https://git.4rs.nl/awiteb/forgejo-guardian"},
-  {pattern = '- (\w+)(\(\w+\))?:', replace = "- "}, # Remove the type
-  {pattern = '- \((\w+)\):', replace = "- (**$1**)"}, # Make the scope blod
-  {pattern = "\t", replace = "    "},
+  { pattern = '<REPO>', replace = "https://git.4rs.nl/awiteb/forgejo-guardian" },
+  { pattern = '- (\w+)(\(\w+\))?:', replace = "- " },                             # Remove the type
+  { pattern = '- \((\w+)\):', replace = "- (**$1**)" },                           # Make the scope blod
+  { pattern = "\t", replace = "    " },
 ]
 
 # remove the leading and trailing whitespace from the template
@@ -75,24 +75,24 @@ trim = true
 
 [git]
 # parse the commits based on https://www.conventionalcommits.org
-conventional_commits = false
+conventional_commits  = false
 filter_unconventional = true
 # process each line of a commit as an individual commit
 split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
-  {pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([**#${2}**](<REPO>/issues/${2}))"}, # replace issue numbers (Note the PR is also an issue in Forgejo, so this will also link to PRs)
-  {pattern = ' +$', replace = ""}, # Remove trailing whitespace.
-  {pattern = ' +', replace = " "}, # Replace multiple spaces with a single space.
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([**#${2}**](<REPO>/issues/${2}))" }, # replace issue numbers (Note the PR is also an issue in Forgejo, so this will also link to PRs)
+  { pattern = ' +$', replace = "" },                                                    # Remove trailing whitespace.
+  { pattern = ' +', replace = " " },                                                    # Replace multiple spaces with a single space.
 ]
 # regex for parsing and grouping commits
 commit_parsers = [
-  {message = "^feat", group = "Added"},
-  {message = "^fix", group = "Fixed"},
-  {message = "^(refactor|change)", group = "Changed"},
-  {message = "^deprecate", group = "Deprecated"},
-  {message = "^remove", group = "Removed"},
-  {message = "^security", group = "Security"},
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^(refactor|change)", group = "Changed" },
+  { message = "^deprecate", group = "Deprecated" },
+  { message = "^remove", group = "Removed" },
+  { message = "^security", group = "Security" },
 ]
 protect_breaking_commits = false
 # filter out the commits that are not matched by commit parsers

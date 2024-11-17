@@ -9,26 +9,30 @@ license     = "AGPL-3.0-or-later"
 
 
 [dependencies]
-serde              = { version = "1.0.214", features = ["derive"] }
+regex              = "1.11.1"
+rust-i18n          = "3.1.2"
 serde_json         = "1.0.132"
+thiserror          = "2.0.2"
 toml               = "0.8.19"
 tracing            = "0.1.40"
 tracing-subscriber = "0.3.18"
-thiserror          = "2.0.2"
-regex              = "1.11.1"
-rust-i18n          = "3.1.2"
 
+serde = { version = "1.0.214", features = ["derive"] }
 reqwest = { version = "0.12.9", default-features = false, features = [
   "charset",
   "http2",
   "rustls-tls",
 ] }
-tokio-util = { version = "0.7.12", default-features = false }
+teloxide = { version = "0.13.0", default-features = false, features = [
+  "macros",
+  "ctrlc_handler",
+  "rustls",
+] }
 tokio = { version = "1.41.1", default-features = false, features = [
   "rt-multi-thread",
   "macros",
   "sync",
   "signal",
 ] }
+tokio-util = { version = "0.7.12", default-features = false }
 url = { version = "2.5.3", default-features = false, features = ["serde"] }
-teloxide = { version = "0.13.0", default-features = false, features = ["macros", "ctrlc_handler", "rustls"] }
