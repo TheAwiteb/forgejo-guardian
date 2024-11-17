@@ -26,7 +26,7 @@ use tokio::sync::mpsc::Sender;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    config::Config,
+    config::{Config, RegexReason},
     error::GuardResult,
     forgejo_api::{self, get_users, ForgejoUser},
     traits::ExprChecker,
@@ -58,15 +58,15 @@ async fn check_new_user(
     user: ForgejoUser,
     request_client: &reqwest::Client,
     config: &Config,
-    sus_sender: &Sender<ForgejoUser>,
-    ban_sender: &Sender<ForgejoUser>,
+    sus_sender: &Sender<(ForgejoUser, RegexReason)>,
+    ban_sender: &Sender<(ForgejoUser, RegexReason)>,
 ) {
     if let Some(re) = config.expressions.ban.is_match(&user) {
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
             if config.telegram.ban_alert {
-                ban_sender.send(user).await.ok();
+                ban_sender.send((user, re)).await.ok();
             }
             return;
         }
@@ -81,11 +81,11 @@ async fn check_new_user(
         {
             tracing::error!("Error while banning a user: {err}");
         } else if config.telegram.ban_alert {
-            ban_sender.send(user).await.ok();
+            ban_sender.send((user, re)).await.ok();
         }
     } else if let Some(re) = config.expressions.sus.is_match(&user) {
         tracing::info!("@{} has been suspected because `{re}`", user.username);
-        sus_sender.send(user).await.ok();
+        sus_sender.send((user, re)).await.ok();
     }
 }
 
@@ -95,8 +95,8 @@ async fn check_new_users(
     last_user_id: Arc<AtomicUsize>,
     request_client: Arc<reqwest::Client>,
     config: Arc<Config>,
-    sus_sender: Sender<ForgejoUser>,
-    ban_sender: Sender<ForgejoUser>,
+    sus_sender: Sender<(ForgejoUser, RegexReason)>,
+    ban_sender: Sender<(ForgejoUser, RegexReason)>,
 ) {
     let is_first_fetch = last_user_id.load(Ordering::Relaxed) == 0;
     match get_new_users(
@@ -135,8 +135,8 @@ async fn check_new_users(
 pub async fn users_fetcher(
     config: Arc<Config>,
     cancellation_token: CancellationToken,
-    sus_sender: Sender<ForgejoUser>,
-    ban_sender: Sender<ForgejoUser>,
+    sus_sender: Sender<(ForgejoUser, RegexReason)>,
+    ban_sender: Sender<(ForgejoUser, RegexReason)>,
 ) {
     let last_user_id = Arc::new(AtomicUsize::new(0));
     let request_client = Arc::new(reqwest::Client::new());

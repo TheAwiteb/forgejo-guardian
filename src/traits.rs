@@ -14,22 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://gnu.org/licenses/agpl.txt>.
 
-use regex::Regex;
-
-use crate::{config::Expr, forgejo_api::ForgejoUser};
+use crate::{
+    config::{Expr, RegexReason},
+    forgejo_api::ForgejoUser,
+};
 
 /// Trait for checking if a user matches one of the expressions
 pub trait ExprChecker {
     /// Returns the first matching expression, if any
-    fn is_match(&self, user: &ForgejoUser) -> Option<Regex>;
+    fn is_match(&self, user: &ForgejoUser) -> Option<RegexReason>;
 }
 
 impl ExprChecker for Expr {
-    fn is_match<'a>(&'a self, user: &ForgejoUser) -> Option<Regex> {
-        let one_of = |hay: &str, exprs: &'a Vec<Regex>| {
+    fn is_match<'a>(&'a self, user: &ForgejoUser) -> Option<RegexReason> {
+        let one_of = |hay: &str, exprs: &'a Vec<RegexReason>| {
             exprs
                 .iter()
-                .find(|re| hay.split('\n').any(|line| re.is_match(line.trim())))
+                .find(|re| hay.split('\n').any(|line| re.re.is_match(line.trim())))
         };
         [
             one_of(&user.username, &self.usernames),

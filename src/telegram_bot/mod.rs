@@ -28,7 +28,10 @@ use teloxide::{dispatching::UpdateFilterExt, prelude::*};
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
-use crate::{config::Config, forgejo_api::ForgejoUser};
+use crate::{
+    config::{Config, RegexReason},
+    forgejo_api::ForgejoUser,
+};
 
 /// Language of the telegram bot
 #[derive(Deserialize)]
@@ -54,8 +57,8 @@ impl Lang {
 pub async fn start_bot(
     config: Arc<Config>,
     cancellation_token: CancellationToken,
-    sus_receiver: Receiver<ForgejoUser>,
-    ban_receiver: Receiver<ForgejoUser>,
+    sus_receiver: Receiver<(ForgejoUser, RegexReason)>,
+    ban_receiver: Receiver<(ForgejoUser, RegexReason)>,
 ) {
     tracing::info!("Starting the telegram bot");
 

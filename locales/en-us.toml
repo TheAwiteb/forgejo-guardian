@@ -8,6 +8,7 @@ sus_alert = """Suspicious user detected! 🚨
 • Bio: %{bio}
 • Website: %{website}
 • Profile: %{profile}
+• Reason: %{reason}
 
 Do you want to ban this user?
 """
@@ -19,6 +20,7 @@ ban_notify = """User has been banned ⛔
 • Bio: %{bio}
 • Website: %{website}
 • Profile: %{profile}
+• Reason: %{reason}
 """
 ban_success = "User has been banned successfully ⛔"
 ban_failed = "Failed to ban the user! ⚠️"
