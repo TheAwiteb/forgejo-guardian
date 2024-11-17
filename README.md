@@ -4,8 +4,8 @@
 
 Simple Forgejo instance guardian, banning users and alerting admins based on certain regular expressions (regex)
 
-<!-- [![Forgejo CI Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/ci.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian)
-[![Forgejo CD Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/cd.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian) -->
+[![Forgejo CI Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/ci.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian)
+[![Forgejo CD Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/cd.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian)
 
 [![agplv3-or-later](https://www.gnu.org/graphics/agplv3-88x31.png)](https://www.gnu.org/licenses/agpl-3.0.html)
 
@@ -13,7 +13,7 @@ Simple Forgejo instance guardian, banning users and alerting admins based on cer
 
 ## Installation
 
-You can let [cargo](https://doc.rust-lang.org/cargo/) build the binary for you, or build it yourself. <!-- You can also download the pre-built binaries from the [releases](https://git.4rs.nl/awiteb/forgejo-guardian/releases) page. -->
+You can let [cargo](https://doc.rust-lang.org/cargo/) build the binary for you, or build it yourself. You can also download the pre-built binaries from the [releases](https://git.4rs.nl/awiteb/forgejo-guardian/releases) page.
 
 ### Build it
 
@@ -97,9 +97,17 @@ Expressions configuration section, with the following fields:
 - `websites`: Regular expressions to match against the websites
 - `locations`: Regular expressions to match against the locations
 
+Each field is an array of regular expressions, the regular expression can be one of the following:
+
+- String: The regular expression itself
+- Table: The regular expression and the reason, with the following fields:
+  - `re` (string, array of string): The regular expression (if it's an array of strings, all regex in that array should match to ban/sus the user)
+  - `reason` (optional string): The reason to ban/sus the user. This will be used in the notification message.
+
 ```toml
 [expressions.ban]
 usernames = ['^admin.*$']
+websites = ['^https://example\.com$', { re = '^https://example2\.com$', reason = "Example 2 is not allowed" }, '^https://example3\.com$']
 
 [expressions.sus]
 usernames = ['^mod.*$']
