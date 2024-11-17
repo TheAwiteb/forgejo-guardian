@@ -51,40 +51,66 @@ where
     Ok(url)
 }
 
-/// Deserialize a vector of strings into a vector of `regex::Regex`
+/// Parse the `re` key in the table, which can be a string or an array of string
+fn parse_re<'de, D>(toml_value: &Value) -> Result<Vec<String>, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    match toml_value {
+        Value::String(str_re) => Ok(vec![str_re.to_owned()]),
+        Value::Array(re_vec) => {
+            re_vec
+                .iter()
+                .map(|str_re| {
+                    str_re.as_str().map(String::from).ok_or_else(|| {
+                        <D::Error as de::Error>::custom(format!(
+                            "expected an array of string, found `{str_re}`"
+                        ))
+                    })
+                })
+                .collect()
+        }
+        value => {
+            Err(<D::Error as de::Error>::custom(format!(
+                "expected a string value or an array of string for `re`, found `{value}`"
+            )))
+        }
+    }
+}
+
+/// Parse the vector of string regex to `Vec<Regex>`
+fn parse_re_vec<'de, D>(re_vec: Vec<String>) -> Result<Vec<Regex>, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    re_vec
+        .into_iter()
+        .map(|re| re.parse().map_err(custom_de_err::<'de, D>))
+        .collect()
+}
+
+/// Deserialize `RegexReason`
 fn deserialize_regex_reason<'de, D>(deserializer: D) -> Result<Vec<RegexReason>, D::Error>
 where
     D: de::Deserializer<'de>,
 {
-    let Ok(json_value) = Vec::<Value>::deserialize(deserializer) else {
+    let Ok(toml_value) = Vec::<Value>::deserialize(deserializer) else {
         return Err(de::Error::custom(
-            "expected an array of strings or tables with the keys `re` and optional `reason`",
+            "expected an array contains strings or arrays of string or tables with the keys `re` \
+             and optional `reason`",
         ));
     };
 
-    json_value
+    toml_value
         .into_iter()
         .map(|value| {
-            if let Value::String(re) = value {
-                Ok(RegexReason::new(
-                    re.parse().map_err(custom_de_err::<'de, D>)?,
-                    None,
-                ))
-            } else if let Value::Table(table) = value {
-                let re = table
-                    .get("re")
-                    .map(|re| {
-                        re.as_str().map(String::from).ok_or_else(|| {
-                            <D::Error as de::Error>::custom(format!(
-                                "expected a string value for `re`, found `{re}`"
-                            ))
-                        })
-                    })
-                    .ok_or_else(|| {
-                        <D::Error as de::Error>::custom(
-                            "The table must contain a `re` key with a string value",
-                        )
-                    })??;
+            if let Value::Table(table) = value {
+                let re_vec = table.get("re").map(parse_re::<D>).ok_or_else(|| {
+                    <D::Error as de::Error>::custom(
+                        "The table must contain a `re` key with a string value or an array of \
+                         string",
+                    )
+                })??;
                 let reason = table
                     .get("reason")
                     .map(|reason| {
@@ -103,14 +129,16 @@ where
                     }
                 }
 
+                Ok(RegexReason::new(parse_re_vec::<D>(re_vec)?, reason))
+            } else if matches!(value, Value::String(_) | Value::Array(_)) {
                 Ok(RegexReason::new(
-                    re.parse().map_err(custom_de_err::<'de, D>)?,
-                    reason,
+                    parse_re_vec::<D>(parse_re::<D>(&value)?)?,
+                    None,
                 ))
             } else {
                 Err(de::Error::custom(format!(
-                    "unexpected value in the regex list, expected a string or a table with `re` \
-                     (string) and optional `reason` (string), found `{value}`"
+                    "unexpected value in the regex list, expected a string or an array of string \
+                     or a table with `re` (string) and optional `reason` (string), found `{value}`"
                 )))
             }
         })
@@ -149,7 +177,7 @@ pub struct Telegram {
 #[derive(Debug, Clone)]
 pub struct RegexReason {
     /// The regular expression
-    pub re:     Regex,
+    pub re_vec: Vec<Regex>,
     /// Optional reason
     pub reason: Option<String>,
 }
@@ -231,14 +259,16 @@ pub struct Config {
 
 impl RegexReason {
     /// Create a new `RegexReason` instance
-    fn new(re: Regex, reason: Option<String>) -> Self {
-        Self { re, reason }
+    fn new(re: Vec<Regex>, reason: Option<String>) -> Self {
+        Self { re_vec: re, reason }
     }
 }
 
 impl Display for RegexReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.re).ok();
+        for re in &self.re_vec {
+            write!(f, "{re} ").ok();
+        }
         if let Some(ref reason) = self.reason {
             write!(f, " ({reason})").ok();
         };

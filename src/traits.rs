@@ -28,9 +28,10 @@ pub trait ExprChecker {
 impl ExprChecker for Expr {
     fn is_match<'a>(&'a self, user: &ForgejoUser) -> Option<RegexReason> {
         let one_of = |hay: &str, exprs: &'a Vec<RegexReason>| {
-            exprs
-                .iter()
-                .find(|re| hay.split('\n').any(|line| re.re.is_match(line.trim())))
+            exprs.iter().find(|re| {
+                hay.split('\n')
+                    .any(|line| re.re_vec.iter().all(|re| re.is_match(line.trim())))
+            })
         };
         [
             one_of(&user.username, &self.usernames),
