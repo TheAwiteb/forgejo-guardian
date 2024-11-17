@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## unreleased
+### Added
+-  Add the email to user details message ([`b3397f6`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/b3397f63163b6679248a680a7ab423d7852df647))
+-  Possibility to put an array of expressions and they must all matches ([`cc2f8a7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/cc2f8a791b2c1be8cae2f6ba9dfd0a718d4d3c71))
+-  Reason for banned and suspicious ([`c96b859`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c96b859931d893751b15977f2ede7034b46628e7))
+
 ## 0.1.0 - 2024-11-16
 ### Added
 -  Add Russian language ([`8dc8c0d`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/8dc8c0d2315d7d47f6f2605fcdfd62499a4c4460))
