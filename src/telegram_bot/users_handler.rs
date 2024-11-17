@@ -54,6 +54,7 @@ fn user_details(msg: &str, user: &ForgejoUser) -> String {
         msg,
         user_id = user.id,
         username = user.username,
+        email = user.email,
         full_name = not_found_if_empty(&user.full_name),
         bio = not_found_if_empty(&user.biography),
         website = not_found_if_empty(&user.website),
