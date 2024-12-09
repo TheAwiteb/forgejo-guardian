@@ -6,10 +6,14 @@ Simple Forgejo instance guardian, banning users and alerting admins based on cer
 
 [![Forgejo CI Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/ci.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian)
 [![Forgejo CD Status](https://git.4rs.nl/awiteb/forgejo-guardian/badges/workflows/cd.yml/badge.svg)](https://git.4rs.nl/awiteb/forgejo-guardian)
+[![Minimum Forgejo version v10.0.0](https://img.shields.io/badge/Minimum_Forgejo_version-v10.0.0-brightgreen?style=flat&color=ff7f24&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTIgMjEyIiB3aWR0aD0iMzIiIGhlaWdodD0iMzIiPjxzdHlsZT5jaXJjbGUscGF0aHtmaWxsOm5vbmU7c3Ryb2tlOiMwMDA7c3Ryb2tlLXdpZHRoOjE1fXBhdGh7c3Ryb2tlLXdpZHRoOjI1fS5vcmFuZ2V7c3Ryb2tlOiNmNjB9LnJlZHtzdHJva2U6I2Q0MDAwMH08L3N0eWxlPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYgNikiPjxwYXRoIGQ9Ik01OCAxNjhWNzBhNTAgNTAgMCAwIDEgNTAtNTBoMjAiIGNsYXNzPSJvcmFuZ2UiLz48cGF0aCBkPSJNNTggMTY4di0zMGE1MCA1MCAwIDAgMSA1MC01MGgyMCIgY2xhc3M9InJlZCIvPjxjaXJjbGUgY3g9IjE0MiIgY3k9IjIwIiByPSIxOCIgY2xhc3M9Im9yYW5nZSIvPjxjaXJjbGUgY3g9IjE0MiIgY3k9Ijg4IiByPSIxOCIgY2xhc3M9InJlZCIvPjxjaXJjbGUgY3g9IjU4IiBjeT0iMTgwIiByPSIxOCIgY2xhc3M9InJlZCIvPjwvZz48L3N2Zz4=)](https://codeberg.org/forgejo/forgejo/milestone/8377)
 
 [![agplv3-or-later](https://www.gnu.org/graphics/agplv3-88x31.png)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 </div>
+
+> [!NOTE]
+> The minimum Forgejo version required is `v10.0.0`, because of this [PR](https://codeberg.org/forgejo/forgejo/pulls/6228).
 
 ## Installation
 
@@ -67,6 +71,22 @@ The global section is the one that doesn't have a name, and it's in the top of t
 
 - `dry_run`: If set to `true`, the guardian will not ban the users, but will only alert the admins (default: `false`)
 - `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
+- `interval`: Interval to check for new users in seconds (default: `300`)
+- `limit`: Limit of users to fetch in each interval (default: `100`)
+
+> [!TIP]
+> Make sure to set `interval` and `limit` to a reasonable values based on your
+> instance size and the number of new users. If your instance is small, you can
+> set `interval` to a higher value (something like `600`) and `limit` to a lower
+> value (something like `50`), so the guardian will fetch latest 50 users every
+> 10 minutes, which should be enough for small instances.
+
+```toml
+dry_run = true
+only_new_users = true
+interval = 40
+limit = 50
+```
 
 #### `forgejo`
 
