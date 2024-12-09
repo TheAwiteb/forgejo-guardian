@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Add the email to user details message ([`b3397f6`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/b3397f63163b6679248a680a7ab423d7852df647))
 -  Possibility to put an array of expressions and they must all matches ([`cc2f8a7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/cc2f8a791b2c1be8cae2f6ba9dfd0a718d4d3c71))
 -  Reason for banned and suspicious ([`c96b859`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c96b859931d893751b15977f2ede7034b46628e7))
+### Fixed
+-  Matching users multiline description correctly ([`3d6b49c`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/3d6b49c01a61d6ee18da488dbc1d1fbf5caedf3c))
 
 ## 0.1.0 - 2024-11-16
 ### Added
