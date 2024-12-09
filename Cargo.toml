@@ -1,7 +1,7 @@
 [package]
 name        = "forgejo-guardian"
 description = "Simple Forgejo instance guardian, banning users and alerting admins based on certain regular expressions"
-version     = "0.1.0"
+version     = "0.2.0"
 edition     = "2021"
 authors     = ["Awiteb <a@4rs.nl>"]
 repository  = "https://git.4rs.nl/awiteb/forgejo-guardian"
