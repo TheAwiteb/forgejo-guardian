@@ -47,6 +47,8 @@ async fn try_main() -> error::GuardResult<()> {
     tracing::info!("The instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
     tracing::info!("Only new users: {}", config.only_new_users);
+    tracing::info!("Interval between each fetch: {} seconds", config.interval);
+    tracing::info!("Users to fetch per request: {}", config.limit);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
 
     rust_i18n::set_locale(config.telegram.lang.as_str());

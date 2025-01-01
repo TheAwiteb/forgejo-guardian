@@ -24,8 +24,14 @@ pub async fn get_users(
     client: &reqwest::Client,
     instance: &url::Url,
     token: &str,
+    limit: u32,
 ) -> GuardResult<Vec<ForgejoUser>> {
-    let req = super::build_request(Method::GET, instance, token, "/api/v1/admin/users");
+    let req = super::build_request(
+        Method::GET,
+        instance,
+        token,
+        &format!("/api/v1/admin/users?limit={limit}&sort=newest"),
+    );
     let res = client
         .execute(req.try_clone().expect("There is no body"))
         .await?;

@@ -46,6 +46,7 @@ async fn get_new_users(
         request_client,
         &config.forgejo.instance,
         &config.forgejo.token,
+        config.limit,
     )
     .await?
     .into_iter()
@@ -144,7 +145,7 @@ pub async fn users_fetcher(
     tracing::info!("Starting users fetcher");
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(120)) => {
+            _ = tokio::time::sleep(Duration::from_secs(config.interval.into())) => {
                 tokio::spawn(check_new_users(
                     Arc::clone(&last_user_id),
                     Arc::clone(&request_client),

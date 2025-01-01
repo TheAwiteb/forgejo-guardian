@@ -28,6 +28,7 @@ use url::Url;
 
 use crate::telegram_bot::Lang;
 
+mod defaults;
 mod deserializers;
 mod utils;
 
@@ -134,6 +135,12 @@ pub struct Config {
     /// Only checks new users
     #[serde(default)]
     pub only_new_users: bool,
+    /// Interval to check for new users in seconds
+    #[serde(default = "defaults::global::interval")]
+    pub interval:       u32,
+    /// Limit of users to fetch in each interval
+    #[serde(default = "defaults::global::limit")]
+    pub limit:          u32,
     /// Configuration for the forgejo guard itself
     pub forgejo:        Forgejo,
     /// Configuration of the telegram bot
