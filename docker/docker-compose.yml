@@ -1,0 +1,5 @@
+services:
+  forgejo-guardian:
+    build: .
+    volumes:
+      - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
