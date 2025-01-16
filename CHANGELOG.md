@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## unreleased
+## [0.3.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.2.0..v0.3.0) - 2025-01-16
 ### Added
 -  Add `interval` and `limit` configurations ([`251fc20`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/251fc209a2d642c3b804a74b08d2bad32d7c3165))
 -  Dockerize the guardian with `Dockerfile` and `docker-compose` ([`688ec77`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/688ec77c77c8b4a3d9e0b5d6e5715c175210e63c))
