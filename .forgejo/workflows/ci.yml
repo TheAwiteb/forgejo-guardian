@@ -13,8 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: https://codeberg.org/awiteb/rust-action@v1.81
-      - name: Check MSRV
-        run: cargo +1.81 build
       - name: Build the source code
         run: cargo build
       - name: Check the code format
