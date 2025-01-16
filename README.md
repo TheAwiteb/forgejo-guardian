@@ -29,14 +29,37 @@ the following command:
 docker-compose up -d # To run the guardian in the background (remove `-d` first time to see the logs and make sure everything is working)
 ```
 
+## Without building the image
+
+If you don't want to build the image yourself, you can use this docker-compose file:
+
+```yaml
+services:
+  forgejo-guardian:
+    image: git.4rs.nl/awiteb/forgejo-guardian:2
+    volumes:
+      - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
+```
+
+Make sure to have the `forgejo-guardian.toml` file in the same directory as the `docker-compose.yml` file, then you can run the following command:
+
+```sh
+docker-compose up -d
+```
+
 ### Without docker-compose
 
-If you want to run the guardian without `docker-compose`, you can build the
-image and run the container with the following commands:
+#### Build the image
 
 ```sh
 docker build -t forgejo-guardian .
 docker run --rm -d -v $PWD/forgejo-guardian.toml:/app/forgejo-guardian.toml:ro forgejo-guardian
+```
+
+#### Without building the image
+
+```sh
+docker run --rm -d -v $PWD/forgejo-guardian.toml:/app/forgejo-guardian.toml:ro git.4rs.nl/awiteb/forgejo-guardian:2
 ```
 
 ## Installation
