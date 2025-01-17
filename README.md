@@ -15,13 +15,34 @@ Simple Forgejo instance guardian, banning users and alerting admins based on cer
 > [!NOTE]
 > The minimum Forgejo version required is `v10.0.0`, because of this [PR](https://codeberg.org/forgejo/forgejo/pulls/6228).
 
+## About
+
+`forgejo-guardian` is a simple guardian for your Forgejo instance, it will ban
+users based on certain regular expressions (regex) and alert the admins about
+them. The alert will send to the admin via a Telegram bot.
+
+### The expressions
+
+See the [Configuration](#Configuration) section for more information about the
+expressions. The different between `ban` and `sus` is that the `ban` will ban
+the user, and the `sus` will only alert the admins about the user and the admin
+can decide to ban the user or not (via telegram inline keyboard). You can also
+set `telegram.ban_alert` to `true` to send a notification when a user is banned.
+
+### Ban action
+
+The ban action can be `purge` or `suspend`, the default is `purge`. The `purge`
+will delete the user and all their data, and the `suspend` will only suspend the
+user, the suspended user can be unsuspended later by the admin from the
+dashboard.
+
 ## Docker
 
 If you want to run the guardian in a docker container, you can find the
 `Dockerfile` and `docker-compose.toml` in the
 [docker](https://git.4rs.nl/awiteb/forgejo-guardian/src/branch/master/docker)
 directory. Copy them or clone the repository, make sure to have `Dockerfile`,
-`docker-compose.toml` and your configuration file `forgejo_guardian.toml` (see
+`docker-compose.toml` and your configuration file `forgejo-guardian.toml` (see
 [Configuration](#Configuration) section) in the same directory, then you can run
 the following command:
 
