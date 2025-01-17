@@ -33,6 +33,7 @@ async fn try_main() -> error::GuardResult<()> {
 
     tracing::info!("The instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
+    tracing::info!("Ban action: {}", config.ban_action);
     tracing::info!("Only new users: {}", config.only_new_users);
     tracing::info!("Interval between each fetch: {} seconds", config.interval);
     tracing::info!("Users to fetch per request: {}", config.limit);

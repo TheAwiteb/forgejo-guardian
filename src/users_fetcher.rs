@@ -64,6 +64,7 @@ async fn check_new_user(
             &config.forgejo.instance,
             &config.forgejo.token,
             &user.username,
+            &config.ban_action,
         )
         .await
         {

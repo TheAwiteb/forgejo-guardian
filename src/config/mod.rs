@@ -19,6 +19,19 @@ mod defaults;
 mod deserializers;
 mod utils;
 
+/// Ban action to take when banning a user
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BanAction {
+    /// Purge the user (Forcibly delete user and any repositories,
+    /// organizations, and packages owned by the user. All comments and issues
+    /// posted by this user will also be deleted.)
+    Purge,
+    /// Suspend the user (Block this user from interacting with this service
+    /// through their account and prohibit signing in.)
+    Suspend,
+}
+
 /// The forgejo config of the guard
 #[derive(Deserialize)]
 pub struct Forgejo {
@@ -128,6 +141,9 @@ pub struct Config {
     /// Limit of users to fetch in each interval
     #[serde(default = "defaults::global::limit")]
     pub limit:          u32,
+    /// Action to take when banning a user
+    #[serde(default = "defaults::global::ban_action")]
+    pub ban_action:     BanAction,
     /// Configuration for the forgejo guard itself
     pub forgejo:        Forgejo,
     /// Configuration of the telegram bot
@@ -135,6 +151,13 @@ pub struct Config {
     /// The expressions, which are used to determine the actions
     #[serde(default)]
     pub expressions:    Exprs,
+}
+
+impl BanAction {
+    /// Returns `true` if the action is `Purge`
+    pub fn is_purge(&self) -> bool {
+        matches!(self, Self::Purge)
+    }
 }
 
 impl RegexReason {
@@ -153,5 +176,14 @@ impl Display for RegexReason {
             write!(f, " ({reason})").ok();
         };
         Ok(())
+    }
+}
+
+impl Display for BanAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Purge => write!(f, "purge"),
+            Self::Suspend => write!(f, "suspend"),
+        }
     }
 }

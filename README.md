@@ -120,6 +120,13 @@ The global section is the one that doesn't have a name, and it's in the top of t
 -   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
 -   `interval`: Interval to check for new users in seconds (default: `300`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
+-   `ban_action`: The action to take when a user is banned, can be one of the following:
+    -   `purge` (default): Forcibly delete user and any repositories, organizations, and
+        packages owned by the user. All comments and issues posted by this user
+        will also be deleted. (unduoable, the user will be permanently deleted)
+    -  `suspend`: Block the user from interacting with the service through their
+       account and prohibit signing in. The admins can later decide to
+       reactivate the user, from the dashboard.
 
 > [!TIP]
 > Make sure to set `interval` and `limit` to a reasonable values based on your
@@ -133,6 +140,7 @@ dry_run = true
 only_new_users = true
 interval = 40
 limit = 50
+ban_action = "suspend"
 ```
 
 #### `forgejo`

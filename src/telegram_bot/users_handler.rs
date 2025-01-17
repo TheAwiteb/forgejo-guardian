@@ -16,14 +16,14 @@ use crate::{
 };
 
 /// Create an inline keyboard of the suspicious user
-fn make_sus_inline_keyboard(sus_user: &ForgejoUser) -> InlineKeyboardMarkup {
+fn make_sus_inline_keyboard(sus_user: &ForgejoUser, action: &str) -> InlineKeyboardMarkup {
     let button = |text: &str, callback: String| {
         InlineKeyboardButton::new(text, InlineKeyboardButtonKind::CallbackData(callback))
     };
 
     InlineKeyboardMarkup::new([[
         button(
-            t!("buttons.ban").as_ref(),
+            t!("buttons.ban", action = action).as_ref(),
             format!("b {}", sus_user.username),
         ),
         button(t!("buttons.ignore").as_ref(), "ignore -".to_owned()),
@@ -39,9 +39,10 @@ fn not_found_if_empty(text: &str) -> Cow<'_, str> {
 }
 
 /// Generate a user details message
-fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason) -> String {
+fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &str) -> String {
     t!(
         msg,
+        action = action,
         user_id = user.id,
         username = user.username,
         email = user.email,
@@ -64,9 +65,17 @@ pub async fn send_sus_alert(
     sus_user: ForgejoUser,
     config: &Config,
 ) -> ResponseResult<()> {
-    let keyboard = make_sus_inline_keyboard(&sus_user);
+    tracing::info!("Sending suspicious user alert to the admins chat");
 
-    let caption = user_details("messages.sus_alert", &sus_user, re);
+    let action = if config.ban_action.is_purge() {
+        t!("words.purge")
+    } else {
+        t!("words.suspend")
+    };
+
+    let keyboard = make_sus_inline_keyboard(&sus_user, &action);
+
+    let caption = user_details("messages.sus_alert", &sus_user, re, &action);
     bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .reply_markup(keyboard)
@@ -82,7 +91,15 @@ pub async fn send_ban_notify(
     sus_user: ForgejoUser,
     config: &Config,
 ) -> ResponseResult<()> {
-    let caption = user_details("messages.ban_notify", &sus_user, re);
+    tracing::info!("Sending ban notification to the admins chat");
+
+    let action = if config.ban_action.is_purge() {
+        t!("words.purge")
+    } else {
+        t!("words.suspend")
+    };
+
+    let caption = user_details("messages.ban_notify", &sus_user, re, &action);
     bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .await?;

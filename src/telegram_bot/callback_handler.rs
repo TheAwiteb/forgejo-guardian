@@ -52,6 +52,7 @@ pub async fn callback_handler(
                     &config.forgejo.instance,
                     &config.forgejo.token,
                     data,
+                    &config.ban_action,
                 )
                 .await
                 .is_ok()

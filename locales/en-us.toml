@@ -12,7 +12,7 @@ sus_alert = """Suspicious user detected! 🚨
 
 Do you want to ban this user?
 """
-ban_notify = """User has been banned ⛔
+ban_notify = """User has been banned (%{action}) ⛔
 • User ID: %{user_id}
 • Username: %{username}
 • Email: %{email}
@@ -28,7 +28,9 @@ ban_denied = "User has been ignored ⚠️"
 
 [words]
 not_found = "Not found"
+purge   = "purge"
+suspend = "suspend"
 
 [buttons]
-ban    = "Ban ⛔"
+ban    = "Ban (%{action}) ⛔"
 ignore = "Ignore ⚠️"
