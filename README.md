@@ -57,7 +57,7 @@ If you don't want to build the image yourself, you can use this docker-compose f
 ```yaml
 services:
   forgejo-guardian:
-    image: git.4rs.nl/awiteb/forgejo-guardian:3
+    image: git.4rs.nl/awiteb/forgejo-guardian:0.3
     volumes:
       - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
 ```
@@ -80,7 +80,7 @@ docker run --rm -d -v $PWD/forgejo-guardian.toml:/app/forgejo-guardian.toml:ro f
 #### Without building the image
 
 ```sh
-docker run --rm -d -v $PWD/forgejo-guardian.toml:/app/forgejo-guardian.toml:ro git.4rs.nl/awiteb/forgejo-guardian:3
+docker run --rm -d -v $PWD/forgejo-guardian.toml:/app/forgejo-guardian.toml:ro git.4rs.nl/awiteb/forgejo-guardian:0.3
 ```
 
 ## Installation
