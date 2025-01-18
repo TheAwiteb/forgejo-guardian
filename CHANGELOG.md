@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## unreleased
+### Added
+-  Clean up instance of inactive users ([**#9**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/9)) ([`d83e49b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/d83e49bcf6ec606f334b9451ad7dc3430152a3bf))
 
 ## [0.3.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.3.0..v0.3.1) - 2025-01-17
 ### Added
