@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## unreleased
 ### Added
+-  Ability to fetch Forgejo token from environment variables ([**#15**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/15)) ([`2bdbf4b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2bdbf4b5f234c8654b51b88a778394543c00f79e))
 -  Clean up instance of inactive users ([**#9**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/9)) ([`d83e49b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/d83e49bcf6ec606f334b9451ad7dc3430152a3bf))
 
 ## [0.3.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.3.0..v0.3.1) - 2025-01-17
