@@ -184,7 +184,7 @@ Inactive users configuration section, with the following fields:
 -   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
 -   `interval`: Time Interval to check for inactive users (default: `7d`)
 
-The `inactive.req_interval` and `inactive.interval` have the following prefixes:
+The `inactive.req_interval` and `inactive.interval` have the following suffixes:
 
 -   `s`: Seconds
 -   `m`: Minutes

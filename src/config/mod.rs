@@ -46,13 +46,13 @@ pub struct Inactive {
     /// Time interval in seconds for the request limit
     #[serde(
         default = "defaults::inactive::req_interval",
-        deserialize_with = "deserializers::prefixed_interval"
+        deserialize_with = "deserializers::suffix_interval"
     )]
     pub req_interval: u32,
     /// Time interval in seconds to check for inactive users
     #[serde(
         default = "defaults::inactive::interval",
-        deserialize_with = "deserializers::prefixed_interval"
+        deserialize_with = "deserializers::suffix_interval"
     )]
     pub interval:     u32,
 }
