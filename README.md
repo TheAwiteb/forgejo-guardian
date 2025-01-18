@@ -23,7 +23,7 @@ them. The alert will send to the admin via a Telegram bot.
 
 ### The expressions
 
-See the [Configuration](#Configuration) section for more information about the
+See the [Configuration](#configuration) section for more information about the
 expressions. The different between `ban` and `sus` is that the `ban` will ban
 the user, and the `sus` will only alert the admins about the user and the admin
 can decide to ban the user or not (via telegram inline keyboard). You can also
