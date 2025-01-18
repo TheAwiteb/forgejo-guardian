@@ -31,4 +31,7 @@ pub enum GuardError {
     /// Failed to ban the user
     #[error("Failed to ban the user, status code: {0}")]
     FailedToBan(StatusCode),
+    /// Other errors, for custom errors
+    #[error("{0}")]
+    Other(String),
 }

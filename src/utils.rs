@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use std::{fs, path::PathBuf, str::FromStr};
+use std::{env, fs, path::PathBuf, str::FromStr};
 
 use tracing::level_filters::LevelFilter;
 
@@ -19,6 +19,23 @@ fn check_warnings(config: &Config) {
              process."
         );
     }
+}
+
+/// Checks if the Forgejo token is specified as an environment variable.
+///
+/// If the token starts with the prefix `env.`, the remainder of the token is
+/// treated as the name of an environment variable from which the actual token
+/// value is retrieved.
+fn check_forgejo_token(config: &mut Config) -> GuardResult<()> {
+    if config.forgejo.token.starts_with("env.") {
+        let (_, env_var) = config.forgejo.token.split_once('.').expect("unreachable");
+        let env_var = env::var(env_var).map_err(|_| {
+            GuardError::Other(format!("Environment variable `{}` not found", env_var))
+        })?;
+        config.forgejo.token = env_var;
+    }
+
+    Ok(())
 }
 
 /// Returns the log level from `RUST_LOG` environment variable
@@ -40,9 +57,11 @@ pub fn get_config() -> GuardResult<Config> {
     };
 
     tracing::info!("Config path: {}", config_path.display());
-    let config = toml::from_str(&fs::read_to_string(&config_path)?).map_err(GuardError::from)?;
+    let mut config =
+        toml::from_str(&fs::read_to_string(&config_path)?).map_err(GuardError::from)?;
 
     check_warnings(&config);
+    check_forgejo_token(&mut config)?;
 
     Ok(config)
 }

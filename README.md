@@ -210,7 +210,11 @@ interval = "7d"
 Forgejo configuration section, with the following fields:
 
 -   `instance_url`: Forgejo instance URL (must be HTTPS or HTTP)
--   `token`: Token to use to get the new users and ban them, requires `read:admin` and `write:admin` scopes.
+-   `token`: Token to use to get the new users and ban them, requires
+    `read:admin` and `write:admin` scopes. The token can be retrieved from an
+    environment variable by prefixing the variable name with `env.`. For
+    example, use `env.FORGEJO_TOKEN` to get the token from the `FORGEJO_TOKEN`
+    environment variable.
 
 ```toml
 [forgejo]
