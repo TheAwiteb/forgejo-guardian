@@ -116,3 +116,42 @@ where
         })
         .collect()
 }
+
+pub fn prefixed_interval<'de, D>(des: D) -> Result<u32, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    let interval = String::deserialize(des)
+        .map_err(|_| de::Error::custom("Expected a prefixed interval, e.g. 1s, 2m"))?;
+    if interval.chars().count() < 2 {
+        return Err(de::Error::custom(format!(
+            "Expected a prefixed interval, e.g. 1s, 2m. found {interval}"
+        )));
+    }
+    let mut chars = interval.chars();
+    chars.next_back();
+    let number = chars.as_str().parse::<u32>().map_err(|err| {
+        let msg = match err.kind() {
+            std::num::IntErrorKind::PosOverflow => {
+                format!("Number is too large: {}", chars.as_str())
+            }
+            _ => format!("Expected positive integer, found: {}", chars.as_str()),
+        };
+
+        de::Error::custom(msg)
+    })?;
+    let prefix = interval.chars().last().expect("the length more then 2");
+    let interval = match prefix {
+        's' => number,
+        'm' => number * 60,
+        'h' => number * 60 * 60,
+        'd' => number * 24 * 60 * 60,
+        _ => {
+            return Err(de::Error::custom(format!(
+                "Unknown prefix `{prefix}`, expected s, m, h, d"
+            )))
+        }
+    };
+
+    Ok(interval)
+}

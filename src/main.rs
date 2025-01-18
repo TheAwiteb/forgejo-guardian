@@ -12,6 +12,7 @@ use tokio_util::sync::CancellationToken;
 pub mod config;
 pub mod error;
 pub mod forgejo_api;
+pub mod inactive_users;
 pub mod telegram_bot;
 pub mod traits;
 pub mod users_fetcher;
@@ -34,12 +35,23 @@ async fn try_main() -> error::GuardResult<()> {
     tracing::info!("The instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
     tracing::info!("Ban action: {}", config.ban_action);
+    tracing::info!(
+        "Inactive users checker enabled: {}",
+        config.inactive.enabled
+    );
     tracing::info!("Only new users: {}", config.only_new_users);
     tracing::info!("Interval between each fetch: {} seconds", config.interval);
     tracing::info!("Users to fetch per request: {}", config.limit);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
 
     rust_i18n::set_locale(config.telegram.lang.as_str());
+
+    if config.inactive.enabled {
+        tokio::spawn(inactive_users::handler(
+            Arc::clone(&config),
+            cancellation_token.clone(),
+        ));
+    }
 
     tokio::spawn(users_fetcher::users_fetcher(
         Arc::clone(&config),

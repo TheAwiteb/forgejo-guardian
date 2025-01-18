@@ -32,6 +32,31 @@ pub enum BanAction {
     Suspend,
 }
 
+#[derive(Deserialize)]
+pub struct Inactive {
+    /// Whether the feature is enabled
+    #[serde(default = "defaults::inactive::enabled")]
+    pub enabled:      bool,
+    /// Number of inactive days to consider
+    #[serde(default = "defaults::inactive::days")]
+    pub days:         u64,
+    /// Number of requests to send
+    #[serde(default = "defaults::inactive::req_limit")]
+    pub req_limit:    u16,
+    /// Time interval in seconds for the request limit
+    #[serde(
+        default = "defaults::inactive::req_interval",
+        deserialize_with = "deserializers::prefixed_interval"
+    )]
+    pub req_interval: u32,
+    /// Time interval in seconds to check for inactive users
+    #[serde(
+        default = "defaults::inactive::interval",
+        deserialize_with = "deserializers::prefixed_interval"
+    )]
+    pub interval:     u32,
+}
+
 /// The forgejo config of the guard
 #[derive(Deserialize)]
 pub struct Forgejo {
@@ -40,6 +65,7 @@ pub struct Forgejo {
     /// Required Permissions:
     /// - `read:admin`: To list the users
     /// - `write:admin`: To ban the users
+    /// - `read:user`: To get user heatmap
     pub token:    String,
     /// The instance, e.g. `https://example.com` or `https://example.com/` or `http://example.com:8080`
     #[serde(rename = "instance_url", deserialize_with = "deserializers::url")]
@@ -144,6 +170,9 @@ pub struct Config {
     /// Action to take when banning a user
     #[serde(default = "defaults::global::ban_action")]
     pub ban_action:     BanAction,
+    /// Inactive users configuration
+    #[serde(default)]
+    pub inactive:       Inactive,
     /// Configuration for the forgejo guard itself
     pub forgejo:        Forgejo,
     /// Configuration of the telegram bot
@@ -184,6 +213,18 @@ impl Display for BanAction {
         match self {
             Self::Purge => write!(f, "purge"),
             Self::Suspend => write!(f, "suspend"),
+        }
+    }
+}
+
+impl Default for Inactive {
+    fn default() -> Self {
+        Self {
+            enabled:      defaults::inactive::enabled(),
+            days:         defaults::inactive::days(),
+            req_limit:    defaults::inactive::req_limit(),
+            req_interval: defaults::inactive::req_interval(),
+            interval:     defaults::inactive::interval(),
         }
     }
 }

@@ -6,16 +6,36 @@ pub mod global {
     use crate::config::BanAction;
 
     /// Default interval for checking for new users.
-    pub fn interval() -> u32 {
+    pub const fn interval() -> u32 {
         300
     }
     /// Default limit for the amount of users to check per fetch.
-    pub fn limit() -> u32 {
+    pub const fn limit() -> u32 {
         100
     }
 
     /// Default ban action to take when banning a user.
-    pub fn ban_action() -> BanAction {
+    pub const fn ban_action() -> BanAction {
         BanAction::Purge
+    }
+}
+
+/// Default configuration for inactive section.
+pub mod inactive {
+    pub const fn enabled() -> bool {
+        false
+    }
+    pub const fn days() -> u64 {
+        30
+    }
+    pub const fn req_limit() -> u16 {
+        200
+    }
+    pub const fn req_interval() -> u32 {
+        10 * 60
+    }
+    pub const fn interval() -> u32 {
+        // 7 days
+        7 * 24 * 60 * 60
     }
 }

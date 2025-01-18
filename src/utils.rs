@@ -10,6 +10,17 @@ use crate::{
     error::{GuardError, GuardResult},
 };
 
+/// Checks for warnings in the config
+fn check_warnings(config: &Config) {
+    if config.inactive.enabled && (config.inactive.req_interval > config.inactive.interval) {
+        tracing::warn!(
+            "The inactive request interval is greater than the inactive interval, \
+             `inactive.req_interval` is intended to prevent hitting the rate limit *during* the \
+             process."
+        );
+    }
+}
+
 /// Returns the log level from `RUST_LOG` environment variable
 pub fn get_log_level() -> LevelFilter {
     std::env::var("RUST_LOG")
@@ -29,5 +40,9 @@ pub fn get_config() -> GuardResult<Config> {
     };
 
     tracing::info!("Config path: {}", config_path.display());
-    toml::from_str(&fs::read_to_string(&config_path)?).map_err(Into::into)
+    let config = toml::from_str(&fs::read_to_string(&config_path)?).map_err(GuardError::from)?;
+
+    check_warnings(&config);
+
+    Ok(config)
 }

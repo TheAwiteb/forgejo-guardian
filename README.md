@@ -36,6 +36,15 @@ will delete the user and all their data, and the `suspend` will only suspend the
 user, the suspended user can be unsuspended later by the admin from the
 dashboard.
 
+### Clean up instance of inactive users
+
+The guardian can also clean up inactive users by setting `inactive.enabled` to
+`true` in the configuration file and specifying the number of days in
+`inactive.days` to consider a user inactive. The guardian will ban users who
+have had no activity since they registered.
+
+Inactivity feature need `read:user` and `read:admin` scopes.
+
 ## Docker
 
 If you want to run the guardian in a docker container, you can find the
@@ -56,10 +65,10 @@ If you don't want to build the image yourself, you can use this docker-compose f
 
 ```yaml
 services:
-  forgejo-guardian:
-    image: git.4rs.nl/awiteb/forgejo-guardian:0.3
-    volumes:
-      - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
+    forgejo-guardian:
+        image: git.4rs.nl/awiteb/forgejo-guardian:0.3
+        volumes:
+            - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
 ```
 
 Make sure to have the `forgejo-guardian.toml` file in the same directory as the `docker-compose.yml` file, then you can run the following command:
@@ -129,6 +138,7 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 In our configuration file you can have the following sections and the global section:
 
+-   `inactive`: Configuration for cleaning up inactive users
 -   `forgejo`: Forgejo instance configuration
 -   `expressions`: Regular expressions to match against
 -   `telegram`: Telegram bot configuration
@@ -145,9 +155,9 @@ The global section is the one that doesn't have a name, and it's in the top of t
     -   `purge` (default): Forcibly delete user and any repositories, organizations, and
         packages owned by the user. All comments and issues posted by this user
         will also be deleted. (unduoable, the user will be permanently deleted)
-    -  `suspend`: Block the user from interacting with the service through their
-       account and prohibit signing in. The admins can later decide to
-       reactivate the user, from the dashboard.
+    -   `suspend`: Block the user from interacting with the service through their
+        account and prohibit signing in. The admins can later decide to
+        reactivate the user, from the dashboard.
 
 > [!TIP]
 > Make sure to set `interval` and `limit` to a reasonable values based on your
@@ -163,6 +173,37 @@ interval = 40
 limit = 50
 ban_action = "suspend"
 ```
+
+#### `inactive`
+
+Inactive users configuration section, with the following fields:
+
+-   `enabled`: Enable the cleanup of inactive users, inactive feature need `read:user` scope (default: `false`)
+-   `days`: Number of days to consider a user inactive (default: `30`)
+-   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`)
+-   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
+-   `interval`: Time Interval to check for inactive users (default: `7d`)
+
+The `inactive.req_interval` and `inactive.interval` have the following prefixes:
+
+-   `s`: Seconds
+-   `m`: Minutes
+-   `h`: Hours
+-   `d`: Days
+
+```toml
+[inactive]
+enabled = true
+days = 30
+req_limit = 200
+req_interval = "10m"
+interval = "7d"
+```
+
+> [!NOTE]
+>
+> Forgejo itself has no rate limiting, but the reverse proxy may have rate
+> limiting.
 
 #### `forgejo`
 

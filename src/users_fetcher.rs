@@ -34,6 +34,8 @@ async fn get_new_users(
         &config.forgejo.instance,
         &config.forgejo.token,
         config.limit,
+        1,
+        "newest",
     )
     .await?
     .into_iter()

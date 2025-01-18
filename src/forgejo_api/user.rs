@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 /// Forgejo user
@@ -28,4 +29,6 @@ pub struct ForgejoUser {
     pub website:    String,
     /// Location
     pub location:   String,
+    /// Created date of the user
+    pub created:    DateTime<Utc>,
 }
