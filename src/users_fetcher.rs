@@ -33,7 +33,7 @@ async fn get_new_users(
         request_client,
         &config.forgejo.instance,
         &config.forgejo.token,
-        config.limit,
+        config.expressions.limit,
         1,
         "newest",
     )
@@ -55,7 +55,7 @@ async fn check_new_user(
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
-            if config.ban_alert {
+            if config.expressions.ban_alert {
                 ban_sender.send((user, re)).await.ok();
             }
             return;
@@ -66,12 +66,12 @@ async fn check_new_user(
             &config.forgejo.instance,
             &config.forgejo.token,
             &user.username,
-            &config.ban_action,
+            &config.expressions.ban_action,
         )
         .await
         {
             tracing::error!("Error while banning a user: {err}");
-        } else if config.ban_alert {
+        } else if config.expressions.ban_alert {
             ban_sender.send((user, re)).await.ok();
         }
     } else if let Some(re) = config.expressions.sus.is_match(&user) {
@@ -107,7 +107,7 @@ async fn check_new_users(
                 last_user_id.store(uid, Ordering::Relaxed);
             }
 
-            if config.only_new_users && is_first_fetch {
+            if config.expressions.only_new_users && is_first_fetch {
                 return;
             }
 
@@ -135,7 +135,7 @@ pub async fn users_fetcher(
     tracing::info!("Starting users fetcher");
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(config.interval.into())) => {
+            _ = tokio::time::sleep(Duration::from_secs(config.expressions.interval.into())) => {
                 tokio::spawn(check_new_users(
                     Arc::clone(&last_user_id),
                     Arc::clone(&request_client),

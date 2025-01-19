@@ -68,7 +68,7 @@ pub async fn send_sus_alert(
 ) -> ResponseResult<()> {
     tracing::info!("Sending suspicious user alert to the admins chat");
 
-    let action = if config.ban_action.is_purge() {
+    let action = if config.expressions.ban_action.is_purge() {
         t!("words.purge")
     } else {
         t!("words.suspend")
@@ -95,7 +95,7 @@ pub async fn send_ban_notify(
 ) -> ResponseResult<()> {
     tracing::info!("Sending ban notification to the admins chat");
 
-    let action = if config.ban_action.is_purge() {
+    let action = if config.expressions.ban_action.is_purge() {
         t!("words.purge")
     } else {
         t!("words.suspend")

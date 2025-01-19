@@ -148,32 +148,9 @@ In our configuration file you can have the following sections and the global sec
 The global section is the one that doesn't have a name, and it's in the top of the configuration file, with the following fields:
 
 -   `dry_run`: If set to `true`, the guardian will not ban the users, but will only alert the admins (default: `false`)
--   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
--   `interval`: Interval to check for new users in seconds (default: `300`)
--   `limit`: Limit of users to fetch in each interval (default: `100`)
--   `ban_alert`: Send a notification when a user is banned (default: `false`)
--   `ban_action`: The action to take when a user is banned, can be one of the following:
-    -   `purge` (default): Forcibly delete user and any repositories, organizations, and
-        packages owned by the user. All comments and issues posted by this user
-        will also be deleted. (unduoable, the user will be permanently deleted)
-    -   `suspend`: Block the user from interacting with the service through their
-        account and prohibit signing in. The admins can later decide to
-        reactivate the user, from the dashboard.
-
-> [!TIP]
-> Make sure to set `interval` and `limit` to a reasonable values based on your
-> instance size and the number of new users. If your instance is small, you can
-> set `interval` to a higher value (something like `600`) and `limit` to a lower
-> value (something like `50`), so the guardian will fetch latest 50 users every
-> 10 minutes, which should be enough for small instances.
 
 ```toml
 dry_run = true
-only_new_users = true
-interval = 40
-limit = 50
-ban_alert = false
-ban_action = "suspend"
 ```
 
 #### `forgejo`
@@ -228,6 +205,17 @@ interval = "7d"
 
 Expressions configuration section, with the following fields:
 
+-   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
+-   `interval`: Interval to check for new users in seconds (default: `300`)
+-   `limit`: Limit of users to fetch in each interval (default: `100`)
+-   `ban_alert`: Send a notification when a user is banned (default: `false`)
+-   `ban_action`: The action to take when a user is banned, can be one of the following:
+    -   `purge` (default): Forcibly delete user and any repositories, organizations, and
+        packages owned by the user. All comments and issues posted by this user
+        will also be deleted. (unduoable, the user will be permanently deleted)
+    -   `suspend`: Block the user from interacting with the service through their
+        account and prohibit signing in. The admins can later decide to
+        reactivate the user, from the dashboard.
 -   `ban`: Regular expressions to match against to ban the user
 -   `sus`: Regular expressions to match against to alert the admins
 
@@ -250,6 +238,13 @@ Each field is an array of regular expressions, the regular expression can be one
     -   `reason` (optional string): The reason to ban/sus the user. This will be used in the notification message.
 
 ```toml
+[expressions]
+only_new_users = true
+interval = 40
+limit = 50
+ban_alert = false
+ban_action = "suspend"
+
 [expressions.ban]
 usernames = ['^admin.*$']
 websites = ['^https://example\.com$', { re = '^https://example2\.com$', reason = "Example 2 is not allowed" }, '^https://example3\.com$']
@@ -257,6 +252,13 @@ websites = ['^https://example\.com$', { re = '^https://example2\.com$', reason =
 [expressions.sus]
 usernames = ['^mod.*$']
 ```
+
+> [!TIP]
+> Make sure to set `interval` and `limit` to a reasonable values based on your
+> instance size and the number of new users. If your instance is small, you can
+> set `interval` to a higher value (something like `600`) and `limit` to a lower
+> value (something like `50`), so the guardian will fetch latest 50 users every
+> 10 minutes, which should be enough for small instances.
 
 #### `telegram`
 

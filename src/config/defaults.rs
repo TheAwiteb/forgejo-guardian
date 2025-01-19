@@ -6,8 +6,8 @@ pub const fn bool_true() -> bool {
     true
 }
 
-/// Global configuration defaults.
-pub mod global {
+/// Defult configuration for expressions section
+pub mod expressions {
     use crate::config::BanAction;
 
     /// Default interval for checking for new users.

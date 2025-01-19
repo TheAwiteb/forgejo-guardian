@@ -32,9 +32,8 @@ async fn try_main() -> error::GuardResult<()> {
     let (ban_sender, ban_receiver) =
         sync::mpsc::channel::<(forgejo_api::ForgejoUser, config::RegexReason)>(100);
 
-    tracing::info!("The instance: {}", config.forgejo.instance);
+    tracing::info!("Forgejo instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
-    tracing::info!("Ban action: {}", config.ban_action);
     tracing::info!(
         "Inactive users checker enabled: {}",
         config.inactive.enabled
@@ -51,12 +50,31 @@ async fn try_main() -> error::GuardResult<()> {
         "Sus expressions enabled: {}",
         config.expressions.sus.enabled
     );
-    tracing::info!("Only new users: {}", config.only_new_users);
-    tracing::info!("Interval between each fetch: {} seconds", config.interval);
-    tracing::info!("Users to fetch per request: {}", config.limit);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
 
     if config.inactive.enabled {
+        tracing::info!(
+            config = "inactive",
+            "Consider inactive after: {} day{s}",
+            config.inactive.days,
+            s = if config.inactive.days >= 2 { "s" } else { "" }
+        );
+        tracing::info!(
+            config = "inactive",
+            "requests limit: {}",
+            config.inactive.req_limit
+        );
+        tracing::info!(
+            config = "inactive",
+            "Interval when hitting the limit: {} seconds",
+            config.inactive.req_interval
+        );
+        tracing::info!(
+            config = "inactive",
+            "Interval between each check: {} seconds",
+            config.inactive.interval,
+        );
+
         tokio::spawn(inactive_users::handler(
             Arc::clone(&config),
             cancellation_token.clone(),
@@ -64,6 +82,27 @@ async fn try_main() -> error::GuardResult<()> {
     }
 
     if config.expressions.ban.enabled || config.expressions.sus.enabled {
+        tracing::info!(
+            config = "expressions",
+            "Ban action: {}",
+            config.expressions.ban_action
+        );
+        tracing::info!(
+            config = "expressions",
+            "Only fetch new users: {}",
+            config.expressions.only_new_users
+        );
+        tracing::info!(
+            config = "expressions",
+            "Interval between each fetch: {} seconds",
+            config.expressions.interval
+        );
+        tracing::info!(
+            config = "expressions",
+            "Users to fetch per request: {}",
+            config.expressions.limit
+        );
+
         if config.expressions.sus.enabled && config.telegram.is_enabled().is_none() {
             tracing::warn!(
                 "The suspicious users expressions are enabled but the Telegram bot is disabled, \
@@ -80,6 +119,9 @@ async fn try_main() -> error::GuardResult<()> {
     }
 
     if let Some(telegram) = config.telegram.is_enabled() {
+        tracing::info!(config = "telegram", "Bot lang: {}", telegram.lang.as_str());
+        tracing::info!(config = "telegram", "Receiver chat ID: {}", telegram.chat);
+
         rust_i18n::set_locale(telegram.lang.as_str());
 
         tokio::spawn(telegram_bot::start_bot(

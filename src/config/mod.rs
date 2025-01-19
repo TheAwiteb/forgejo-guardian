@@ -155,13 +155,28 @@ pub struct Expr {
 }
 
 /// the expressions
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug)]
 pub struct Exprs {
+    /// Only checks new users
+    #[serde(default)]
+    pub only_new_users: bool,
+    /// Interval to check for new users in seconds
+    #[serde(default = "defaults::expressions::interval")]
+    pub interval:       u32,
+    /// Limit of users to fetch in each interval
+    #[serde(default = "defaults::expressions::limit")]
+    pub limit:          u32,
+    /// Action to take when banning a user
+    #[serde(default = "defaults::expressions::ban_action")]
+    pub ban_action:     BanAction,
+    /// Send an alert when ban a user
+    #[serde(default)]
+    pub ban_alert:      bool,
     /// Direct ban expressions.
     ///
     /// Users are directly banned if any of the expressions are true
     #[serde(default)]
-    pub ban: Expr,
+    pub ban:            Expr,
 
     /// Alert expressions.
     ///
@@ -176,33 +191,18 @@ pub struct Exprs {
 pub struct Config {
     /// Dry run, without banning the users
     #[serde(default)]
-    pub dry_run:        bool,
-    /// Only checks new users
-    #[serde(default)]
-    pub only_new_users: bool,
-    /// Interval to check for new users in seconds
-    #[serde(default = "defaults::global::interval")]
-    pub interval:       u32,
-    /// Limit of users to fetch in each interval
-    #[serde(default = "defaults::global::limit")]
-    pub limit:          u32,
-    /// Action to take when banning a user
-    #[serde(default = "defaults::global::ban_action")]
-    pub ban_action:     BanAction,
-    /// Send an alert when ban a user
-    #[serde(default)]
-    pub ban_alert:      bool,
+    pub dry_run:     bool,
     /// Inactive users configuration
     #[serde(default)]
-    pub inactive:       Inactive,
+    pub inactive:    Inactive,
     /// Configuration for the forgejo guard itself
-    pub forgejo:        Forgejo,
+    pub forgejo:     Forgejo,
     /// Configuration of the telegram bot
     #[serde(default)]
-    pub telegram:       Telegram,
+    pub telegram:    Telegram,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
-    pub expressions:    Exprs,
+    pub expressions: Exprs,
 }
 
 impl BanAction {
@@ -258,6 +258,20 @@ impl Default for Inactive {
             req_limit:    defaults::inactive::req_limit(),
             req_interval: defaults::inactive::req_interval(),
             interval:     defaults::inactive::interval(),
+        }
+    }
+}
+
+impl Default for Exprs {
+    fn default() -> Self {
+        Self {
+            only_new_users: false,
+            ban_alert:      false,
+            interval:       defaults::expressions::interval(),
+            limit:          defaults::expressions::limit(),
+            ban_action:     defaults::expressions::ban_action(),
+            ban:            Expr::default(),
+            sus:            Expr::default(),
         }
     }
 }
