@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## unreleased
+## [0.4.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.3.1..v0.4.0) - 2025-01-19
 ### Added
 -  Ability to Enable/disable `sus` and `ban` expressions, and Telegram bot ([`a89a675`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a89a675a210685553a2926c2a41a12c02ab33163))
     - **BC**:  `telegram.ban_alert` has been moved to the global scope
