@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## unreleased
 ### Added
+-  Ability to Enable/disable `sus` and `ban` expressions, and Telegram bot ([`a89a675`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a89a675a210685553a2926c2a41a12c02ab33163))
+    - **BC**:  `telegram.ban_alert` has been moved to the global scope
 -  Ability to fetch Forgejo token from environment variables ([**#15**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/15)) ([`2bdbf4b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2bdbf4b5f234c8654b51b88a778394543c00f79e))
 -  Clean up instance of inactive users ([**#9**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/9)) ([`d83e49b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/d83e49bcf6ec606f334b9451ad7dc3430152a3bf))
 
