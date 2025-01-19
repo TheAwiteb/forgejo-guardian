@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **BC**:  `telegram.ban_alert` has been moved to the global scope
 -  Ability to fetch Forgejo token from environment variables ([**#15**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/15)) ([`2bdbf4b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2bdbf4b5f234c8654b51b88a778394543c00f79e))
 -  Clean up instance of inactive users ([**#9**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/9)) ([`d83e49b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/d83e49bcf6ec606f334b9451ad7dc3430152a3bf))
+### Fixed
+-  Move unglobal fields to the expressions section ([**#18**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/18)) ([`a82cd4b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a82cd4bc5741a41ab76aef16967de6e1d72bfe50))
+    - **BC**:  Move unglobal fields to the expressions section
 
 ## [0.3.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.3.0..v0.3.1) - 2025-01-17
 ### Added
