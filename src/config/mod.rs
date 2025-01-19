@@ -15,8 +15,10 @@ use url::Url;
 
 use crate::telegram_bot::Lang;
 
+mod boolean;
 mod defaults;
 mod deserializers;
+pub mod parse_invalid;
 mod utils;
 
 /// Ban action to take when banning a user
@@ -72,18 +74,32 @@ pub struct Forgejo {
     pub instance: Url,
 }
 
+/// The telegram bot data
+#[derive(Clone, Deserialize)]
+pub struct TelegramData {
+    /// Telegram bot token
+    pub token: String,
+    /// Chat to send the alert in
+    pub chat:  ChatId,
+    /// Bot language
+    pub lang:  Lang,
+}
+
 /// The telegram bot configuration
 #[derive(Deserialize)]
-pub struct Telegram {
-    /// Telegram bot token
-    pub token:     String,
-    /// Chat to send the alert in
-    pub chat:      ChatId,
-    /// Send an alert when ban a user
-    #[serde(default)]
-    pub ban_alert: bool,
-    /// Bot language
-    pub lang:      Lang,
+#[serde(untagged)]
+pub enum Telegram {
+    Enabled {
+        /// Must be `true` to enable the Telegram bot
+        enabled: boolean::True,
+        #[serde(flatten)]
+        data:    TelegramData,
+    },
+    Disabled {
+        /// Must be `false` to disable the Telegram bot
+        enabled: boolean::False,
+    },
+    Invalid(toml::Value),
 }
 
 /// The regular expression with the reason
@@ -98,6 +114,9 @@ pub struct RegexReason {
 /// The expression
 #[derive(Deserialize, Debug, Default)]
 pub struct Expr {
+    /// Whether the expression is enabled
+    #[serde(default = "defaults::bool_true")]
+    pub enabled:   bool,
     /// The regular expressions that the action will be performed if they are
     /// present in the username
     #[serde(default)]
@@ -170,12 +189,16 @@ pub struct Config {
     /// Action to take when banning a user
     #[serde(default = "defaults::global::ban_action")]
     pub ban_action:     BanAction,
+    /// Send an alert when ban a user
+    #[serde(default)]
+    pub ban_alert:      bool,
     /// Inactive users configuration
     #[serde(default)]
     pub inactive:       Inactive,
     /// Configuration for the forgejo guard itself
     pub forgejo:        Forgejo,
     /// Configuration of the telegram bot
+    #[serde(default)]
     pub telegram:       Telegram,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
@@ -193,6 +216,16 @@ impl RegexReason {
     /// Create a new `RegexReason` instance
     fn new(re: Vec<Regex>, reason: Option<String>) -> Self {
         Self { re_vec: re, reason }
+    }
+}
+
+impl Telegram {
+    /// Returns the Telegram data if the Telegram bot is enabled
+    pub fn is_enabled(&self) -> Option<&TelegramData> {
+        match self {
+            Telegram::Enabled { data, .. } => Some(data),
+            _ => None,
+        }
     }
 }
 
@@ -225,6 +258,14 @@ impl Default for Inactive {
             req_limit:    defaults::inactive::req_limit(),
             req_interval: defaults::inactive::req_interval(),
             interval:     defaults::inactive::interval(),
+        }
+    }
+}
+
+impl Default for Telegram {
+    fn default() -> Self {
+        Self::Disabled {
+            enabled: boolean::False,
         }
     }
 }

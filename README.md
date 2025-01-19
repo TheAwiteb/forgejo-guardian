@@ -151,6 +151,7 @@ The global section is the one that doesn't have a name, and it's in the top of t
 -   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
 -   `interval`: Interval to check for new users in seconds (default: `300`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
+-   `ban_alert`: Send a notification when a user is banned (default: `false`)
 -   `ban_action`: The action to take when a user is banned, can be one of the following:
     -   `purge` (default): Forcibly delete user and any repositories, organizations, and
         packages owned by the user. All comments and issues posted by this user
@@ -171,7 +172,25 @@ dry_run = true
 only_new_users = true
 interval = 40
 limit = 50
+ban_alert = false
 ban_action = "suspend"
+```
+
+#### `forgejo`
+
+Forgejo configuration section, with the following fields:
+
+-   `instance_url`: Forgejo instance URL (must be HTTPS or HTTP) **required**
+-   `token`: Token to use to get the new users and ban them, requires
+    `read:admin`, `write:admin` and `read:user` scopes. The token can be
+    retrieved from an environment variable by prefixing the variable name with
+    `env.`. For example, use `env.FORGEJO_TOKEN` to get the token from the
+    `FORGEJO_TOKEN` environment variable. **required**
+
+```toml
+[forgejo]
+instance_url = "https://forgejo.example"
+token = "your-token"
 ```
 
 #### `inactive`
@@ -205,23 +224,6 @@ interval = "7d"
 > Forgejo itself has no rate limiting, but the reverse proxy may have rate
 > limiting.
 
-#### `forgejo`
-
-Forgejo configuration section, with the following fields:
-
--   `instance_url`: Forgejo instance URL (must be HTTPS or HTTP)
--   `token`: Token to use to get the new users and ban them, requires
-    `read:admin` and `write:admin` scopes. The token can be retrieved from an
-    environment variable by prefixing the variable name with `env.`. For
-    example, use `env.FORGEJO_TOKEN` to get the token from the `FORGEJO_TOKEN`
-    environment variable.
-
-```toml
-[forgejo]
-instance_url = "https://forgejo.example"
-token = "your-token"
-```
-
 #### `expressions`
 
 Expressions configuration section, with the following fields:
@@ -231,6 +233,8 @@ Expressions configuration section, with the following fields:
 
 `ban` and `sus` are tables, and each one have the following fields:
 
+-   `enabled`: Enable the expressions (default: enabled if the section is present,
+    otherwise disabled. You can disable manually by setting it to `false`)
 -   `usernames`: Regular expressions to match against the usernames
 -   `full_names`: Regular expressions to match against the full names
 -   `biographies`: Regular expressions to match against the biographies
@@ -258,10 +262,13 @@ usernames = ['^mod.*$']
 
 Telegram bot configuration section, with the following fields:
 
--   `token`: Telegram bot token
--   `chat`: Chat ID to send the alerts to (Can be a group or a channel or a user)
--   `ban_alert`: Send a notification when a user is banned (default: `false`)
--   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and `ru-ru` are supported)
+-   `enabled`: Enable the Telegram bot (default: If the section is present, it's
+    required, otherwise disabled)
+-   `token`: Telegram bot token **required, if the section is enabled**
+-   `chat`: Chat ID to send the alerts to (Can be a group or a channel or a
+    user) **required, if the section is enabled**
+-   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and
+    `ru-ru` are supported) **required, if the section is enabled**
 
 ```toml
 [telegram]

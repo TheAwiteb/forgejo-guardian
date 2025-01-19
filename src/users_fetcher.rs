@@ -55,7 +55,7 @@ async fn check_new_user(
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
-            if config.telegram.ban_alert {
+            if config.ban_alert {
                 ban_sender.send((user, re)).await.ok();
             }
             return;
@@ -71,7 +71,7 @@ async fn check_new_user(
         .await
         {
             tracing::error!("Error while banning a user: {err}");
-        } else if config.telegram.ban_alert {
+        } else if config.ban_alert {
             ban_sender.send((user, re)).await.ok();
         }
     } else if let Some(re) = config.expressions.sus.is_match(&user) {

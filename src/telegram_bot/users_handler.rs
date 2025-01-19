@@ -11,7 +11,7 @@ use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    config::{Config, RegexReason},
+    config::{Config, RegexReason, TelegramData},
     forgejo_api::ForgejoUser,
 };
 
@@ -61,6 +61,7 @@ fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &str) -
 /// Send a suspicious user alert to the admins
 pub async fn send_sus_alert(
     bot: &Bot,
+    telegram: &TelegramData,
     re: &RegexReason,
     sus_user: ForgejoUser,
     config: &Config,
@@ -76,7 +77,7 @@ pub async fn send_sus_alert(
     let keyboard = make_sus_inline_keyboard(&sus_user, &action);
 
     let caption = user_details("messages.sus_alert", &sus_user, re, &action);
-    bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
+    bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .reply_markup(keyboard)
         .await?;
@@ -87,6 +88,7 @@ pub async fn send_sus_alert(
 /// Send a ban notification to the admins chat
 pub async fn send_ban_notify(
     bot: &Bot,
+    telegram: &TelegramData,
     re: &RegexReason,
     sus_user: ForgejoUser,
     config: &Config,
@@ -100,7 +102,7 @@ pub async fn send_ban_notify(
     };
 
     let caption = user_details("messages.ban_notify", &sus_user, re, &action);
-    bot.send_photo(config.telegram.chat, InputFile::url(sus_user.avatar_url))
+    bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .await?;
 
@@ -111,6 +113,7 @@ pub async fn send_ban_notify(
 pub async fn users_handler(
     bot: Bot,
     config: Arc<Config>,
+    telegram: Arc<TelegramData>,
     cancellation_token: CancellationToken,
     mut sus_receiver: Receiver<(ForgejoUser, RegexReason)>,
     mut ban_receiver: Receiver<(ForgejoUser, RegexReason)>,
@@ -118,10 +121,10 @@ pub async fn users_handler(
     loop {
         tokio::select! {
             Some((sus_user, re)) = sus_receiver.recv() => {
-                send_sus_alert(&bot, &re, sus_user, &config).await.ok();
+                send_sus_alert(&bot, &telegram, &re, sus_user, &config).await.ok();
             }
             Some((banned_user, re)) = ban_receiver.recv() => {
-                send_ban_notify(&bot, &re, banned_user, &config).await.ok();
+                send_ban_notify(&bot,&telegram, &re, banned_user, &config).await.ok();
             }
             _ = cancellation_token.cancelled() => {
                 tracing::info!("sus users handler has been stopped successfully.");

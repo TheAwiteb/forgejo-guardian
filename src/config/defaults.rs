@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
+/// A constant function that returns `true`.
+pub const fn bool_true() -> bool {
+    true
+}
+
 /// Global configuration defaults.
 pub mod global {
     use crate::config::BanAction;

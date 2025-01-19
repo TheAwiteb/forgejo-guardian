@@ -16,12 +16,12 @@ use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    config::{Config, RegexReason},
+    config::{Config, RegexReason, TelegramData},
     forgejo_api::ForgejoUser,
 };
 
 /// Language of the telegram bot
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Lang {
     EnUs,
@@ -43,13 +43,15 @@ impl Lang {
 /// Start the telegram bot
 pub async fn start_bot(
     config: Arc<Config>,
+    telegram: TelegramData,
     cancellation_token: CancellationToken,
     sus_receiver: Receiver<(ForgejoUser, RegexReason)>,
     ban_receiver: Receiver<(ForgejoUser, RegexReason)>,
 ) {
     tracing::info!("Starting the telegram bot");
 
-    let bot = Bot::new(&config.telegram.token);
+    let telegram = Arc::new(telegram);
+    let bot = Bot::new(&telegram.token);
     let handler = dptree::entry()
         .branch(
             Update::filter_message()
@@ -60,6 +62,7 @@ pub async fn start_bot(
     tokio::spawn(users_handler::users_handler(
         bot.clone(),
         Arc::clone(&config),
+        Arc::clone(&telegram),
         cancellation_token,
         sus_receiver,
         ban_receiver,

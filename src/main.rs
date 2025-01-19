@@ -39,12 +39,22 @@ async fn try_main() -> error::GuardResult<()> {
         "Inactive users checker enabled: {}",
         config.inactive.enabled
     );
+    tracing::info!(
+        "Telegram enabled: {}",
+        config.telegram.is_enabled().is_some()
+    );
+    tracing::info!(
+        "Ban expressions enabled: {}",
+        config.expressions.ban.enabled
+    );
+    tracing::info!(
+        "Sus expressions enabled: {}",
+        config.expressions.sus.enabled
+    );
     tracing::info!("Only new users: {}", config.only_new_users);
     tracing::info!("Interval between each fetch: {} seconds", config.interval);
     tracing::info!("Users to fetch per request: {}", config.limit);
     tracing::debug!("The config exprs: {:#?}", config.expressions);
-
-    rust_i18n::set_locale(config.telegram.lang.as_str());
 
     if config.inactive.enabled {
         tokio::spawn(inactive_users::handler(
@@ -53,19 +63,33 @@ async fn try_main() -> error::GuardResult<()> {
         ));
     }
 
-    tokio::spawn(users_fetcher::users_fetcher(
-        Arc::clone(&config),
-        cancellation_token.clone(),
-        sus_sender,
-        ban_sender,
-    ));
+    if config.expressions.ban.enabled || config.expressions.sus.enabled {
+        if config.expressions.sus.enabled && config.telegram.is_enabled().is_none() {
+            tracing::warn!(
+                "The suspicious users expressions are enabled but the Telegram bot is disabled, \
+                 the suspicious users will not be alerted"
+            );
+        }
 
-    tokio::spawn(telegram_bot::start_bot(
-        Arc::clone(&config),
-        cancellation_token.clone(),
-        sus_receiver,
-        ban_receiver,
-    ));
+        tokio::spawn(users_fetcher::users_fetcher(
+            Arc::clone(&config),
+            cancellation_token.clone(),
+            sus_sender,
+            ban_sender,
+        ));
+    }
+
+    if let Some(telegram) = config.telegram.is_enabled() {
+        rust_i18n::set_locale(telegram.lang.as_str());
+
+        tokio::spawn(telegram_bot::start_bot(
+            Arc::clone(&config),
+            telegram.clone(),
+            cancellation_token.clone(),
+            sus_receiver,
+            ban_receiver,
+        ));
+    }
 
     tokio::select! {
         _ = ctrl_c() => {

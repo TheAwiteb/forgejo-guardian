@@ -6,7 +6,7 @@ use std::{env, fs, path::PathBuf, str::FromStr};
 use tracing::level_filters::LevelFilter;
 
 use crate::{
-    config::{Config, CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH},
+    config::{parse_invalid, Config, Telegram, CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH},
     error::{GuardError, GuardResult},
 };
 
@@ -62,6 +62,12 @@ pub fn get_config() -> GuardResult<Config> {
 
     check_warnings(&config);
     check_forgejo_token(&mut config)?;
+    if let Telegram::Invalid(toml_value) = &config.telegram {
+        return Err(GuardError::Other(format!(
+            "Configuration Error: {}",
+            parse_invalid::invalid_telegram(toml_value,)
+        )));
+    }
 
     Ok(config)
 }
