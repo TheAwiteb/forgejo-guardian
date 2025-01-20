@@ -172,10 +172,12 @@ token = "your-token"
 
 #### `inactive`
 
+When enabled, users that never did anything on the instance will be deleted.
+
 Inactive users configuration section, with the following fields:
 
 -   `enabled`: Enable the cleanup of inactive users, inactive feature need `read:user` scope (default: `false`)
--   `days`: Number of days to consider a user inactive (default: `30`)
+-   `days`: The number of days that a new user is given to become active. (default: `30`)
 -   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`)
 -   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
 -   `interval`: Time Interval to check for inactive users (default: `7d`)
