@@ -6,7 +6,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use reqwest::{Client, Method};
+use reqwest::Client;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
@@ -18,16 +18,15 @@ const LIMIT: u32 = 30;
 
 /// Check if the user is inactive.
 async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> usize {
-    let res = req_client
-        .execute(forgejo_api::build_request(
-            Method::GET,
-            &config.forgejo.instance,
-            &config.forgejo.token,
-            &format!("/api/v1/users/{}/heatmap", user.username),
-        ))
-        .await;
-    if let Ok(res) = res {
-        if res.text().await.unwrap_or_default().trim() == "[]" {
+    match forgejo_api::is_empty_heatmap(
+        req_client,
+        &config.forgejo.instance,
+        &config.forgejo.token,
+        &user.username,
+    )
+    .await
+    {
+        Ok(true) => {
             tracing::info!("User `@{}` is inactive.", user.username);
             if !config.dry_run {
                 if let Err(err) = forgejo_api::ban_user(
@@ -41,10 +40,15 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
                 {
                     tracing::error!("Error while ban inactive user `@{}`: {err}", user.username);
                 }
+                return 2; // heatmap and purge request}
             }
-            return 2; // heatmap and purge request
         }
+        Err(err) => {
+            tracing::error!("{err}");
+        }
+        _ => {}
     }
+
     1 // only heatmap request
 }
 
@@ -88,7 +92,7 @@ async fn inactive_checker(
         let users = match users {
             Ok(users) => {
                 if users.is_empty() {
-                    tracing::debug!("No more inactive users to check.");
+                    tracing::info!("No more inactive users to check.");
                     break;
                 }
                 users.into_iter().filter(|u| {

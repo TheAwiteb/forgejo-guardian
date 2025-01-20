@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
 use reqwest::StatusCode;
+use url::Url;
 
 use crate::config::{CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH};
 
@@ -17,8 +18,8 @@ pub enum GuardError {
     #[error("Sending request error: {0}")]
     RequestError(#[from] reqwest::Error),
     /// Invalid response from Forgejo
-    #[error("Invalid response from Forgejo, the error `{0:?}` request `{1:?}`")]
-    InvalidForgejoResponse(String, reqwest::Request),
+    #[error("Invalid response from Forgejo, the error `{0:?}` from `{1}`")]
+    InvalidForgejoResponse(String, Url),
     /// Faild to get the config file
     #[error(
         "The configuration file could not be accessed, its path is not in the `{CONFIG_PATH_ENV}` \

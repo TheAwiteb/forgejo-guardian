@@ -5,10 +5,12 @@
 
 mod ban_user;
 mod get_users;
+mod heatmap;
 mod user;
 
 pub use ban_user::*;
 pub use get_users::*;
+pub use heatmap::*;
 use reqwest::{Method, Request};
 pub use user::*;
 

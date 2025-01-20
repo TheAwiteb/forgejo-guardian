@@ -21,19 +21,19 @@ pub async fn get_users(
         token,
         &format!("/api/v1/admin/users?limit={limit}&page={page}&sort={sort}"),
     );
-    let res = client
-        .execute(req.try_clone().expect("There is no body"))
-        .await?;
+    let url = req.url().clone();
+
+    let res = client.execute(req).await?;
 
     if !res.status().is_success() {
         return Err(GuardError::InvalidForgejoResponse(
             format!("Status code: {status}", status = res.status()),
-            req,
+            url,
         ));
     }
 
     tracing::debug!("Get users response: {res:?}");
 
     serde_json::from_str(&res.text().await?)
-        .map_err(|err| GuardError::InvalidForgejoResponse(err.to_string(), req))
+        .map_err(|err| GuardError::InvalidForgejoResponse(err.to_string(), url))
 }
