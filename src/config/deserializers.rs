@@ -155,3 +155,21 @@ where
 
     Ok(interval)
 }
+
+/// Deserialize the deserializer into `T` then check if the value is greater
+/// than or equal to `MIN`
+pub fn unsigned_minimum<'de, T, D, const MIN: u8>(des: D) -> Result<T, D::Error>
+where
+    D: de::Deserializer<'de>,
+    T: From<u8>,
+    T: PartialOrd,
+    T: Deserialize<'de>,
+{
+    let value = T::deserialize(des)?;
+    if T::from(MIN) > value {
+        return Err(de::Error::custom(format!(
+            "Is less than the minimum value, which is {MIN}"
+        )));
+    }
+    Ok(value)
+}

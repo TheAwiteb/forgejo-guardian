@@ -335,7 +335,6 @@ name = "forgejo-guardian"
 version = "0.4.0"
 dependencies = [
  "chrono",
- "futures",
  "regex",
  "reqwest 0.12.9",
  "rust-i18n",

@@ -44,6 +44,7 @@ pub struct Inactive {
     pub days:         u64,
     /// Number of requests to send
     #[serde(default = "defaults::inactive::req_limit")]
+    #[serde(deserialize_with = "deserializers::unsigned_minimum::<_, _, 2>")]
     pub req_limit:    u16,
     /// Time interval in seconds for the request limit
     #[serde(

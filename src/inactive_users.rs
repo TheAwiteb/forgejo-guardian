@@ -58,20 +58,28 @@ async fn inactive_checker(
     req_client: &Client,
     config: &Config,
 ) {
-    let mut reqs: usize = 0;
-    let mut page = 1;
-    let now = SystemTime::now();
-    let days_secs = config.inactive.days * 24 * 60 * 60;
-    loop {
-        if reqs >= config.inactive.req_limit.into() {
+    let wait_interval = || {
+        async {
             tracing::debug!(
                 "Reached the request limit for inactive users checker. Waiting for {} seconds.",
                 config.inactive.req_interval
             );
             tokio::select! {
-                _ = tokio::time::sleep(Duration::from_secs(config.inactive.req_interval.into())) => {}
-                _ = cancellation_token.cancelled() => break
-            };
+                _ = tokio::time::sleep(Duration::from_secs(config.inactive.req_interval.into())) => false,
+                _ = cancellation_token.cancelled() => true,
+            }
+        }
+    };
+
+    let mut reqs: usize = 0;
+    let mut page = 1;
+    let now = SystemTime::now();
+    let days_secs = config.inactive.days * 24 * 60 * 60;
+    'main_loop: loop {
+        if reqs >= config.inactive.req_limit.into() {
+            if wait_interval().await {
+                break;
+            }
 
             reqs = 0;
         }
@@ -107,12 +115,17 @@ async fn inactive_checker(
                 break;
             }
         };
-        let requests_count: usize =
-            futures::future::join_all(users.map(|u| check_user(req_client, config, u)))
-                .await
-                .into_iter()
-                .sum();
-        reqs += requests_count;
+        for user in users {
+            // +2 Because the next check need 1~2 requests
+            if (reqs + 2) > config.inactive.req_limit.into() {
+                if wait_interval().await {
+                    tracing::warn!("Inactive users checker stopped while checking users.");
+                    break 'main_loop;
+                }
+                reqs = 0
+            }
+            reqs += check_user(req_client, config, user).await;
+        }
         page += 1;
     }
 }

@@ -161,7 +161,7 @@ Forgejo configuration section, with the following fields:
 -   `token`: Token to use to get the new users and ban them, requires
     `read:admin`, `write:admin` and `read:user` scopes. The token can be
     retrieved from an environment variable by prefixing the variable name with
-    `env.`. For example, use `env.FORGEJO_TOKEN` to get the token from the
+    `"env."`. For example, use `"env.FORGEJO_TOKEN"` to get the token from the
     `FORGEJO_TOKEN` environment variable. **required**
 
 ```toml
@@ -178,7 +178,7 @@ Inactive users configuration section, with the following fields:
 
 -   `enabled`: Enable the cleanup of inactive users, inactive feature need `read:user` scope (default: `false`)
 -   `days`: The number of days that a new user is given to become active. (default: `30`)
--   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`)
+-   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `2`)
 -   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
 -   `interval`: Time Interval to check for inactive users (default: `7d`)
 
