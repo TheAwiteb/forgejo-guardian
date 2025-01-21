@@ -38,26 +38,35 @@ pub enum BanAction {
 pub struct Inactive {
     /// Whether the feature is enabled
     #[serde(default = "defaults::inactive::enabled")]
-    pub enabled:      bool,
+    pub enabled:           bool,
+    /// List of usernames to exclude
+    #[serde(default)]
+    pub exclude:           Vec<String>,
+    /// Source ID to consider, if empty all sources are considered
+    #[serde(default)]
+    pub source_id:         Vec<u32>,
+    /// Source ID to exclude
+    #[serde(default)]
+    pub source_id_exclude: Vec<u32>,
     /// Number of inactive days to consider
     #[serde(default = "defaults::inactive::days")]
-    pub days:         u64,
+    pub days:              u64,
     /// Number of requests to send
     #[serde(default = "defaults::inactive::req_limit")]
     #[serde(deserialize_with = "deserializers::unsigned_minimum::<_, _, 2>")]
-    pub req_limit:    u16,
+    pub req_limit:         u16,
     /// Time interval in seconds for the request limit
     #[serde(
         default = "defaults::inactive::req_interval",
         deserialize_with = "deserializers::suffix_interval"
     )]
-    pub req_interval: u32,
+    pub req_interval:      u32,
     /// Time interval in seconds to check for inactive users
     #[serde(
         default = "defaults::inactive::interval",
         deserialize_with = "deserializers::suffix_interval"
     )]
-    pub interval:     u32,
+    pub interval:          u32,
 }
 
 /// The forgejo config of the guard
@@ -254,11 +263,14 @@ impl Display for BanAction {
 impl Default for Inactive {
     fn default() -> Self {
         Self {
-            enabled:      defaults::inactive::enabled(),
-            days:         defaults::inactive::days(),
-            req_limit:    defaults::inactive::req_limit(),
-            req_interval: defaults::inactive::req_interval(),
-            interval:     defaults::inactive::interval(),
+            enabled:           defaults::inactive::enabled(),
+            exclude:           Vec::new(),
+            source_id:         Vec::new(),
+            source_id_exclude: Vec::new(),
+            days:              defaults::inactive::days(),
+            req_limit:         defaults::inactive::req_limit(),
+            req_interval:      defaults::inactive::req_interval(),
+            interval:          defaults::inactive::interval(),
         }
     }
 }

@@ -18,6 +18,21 @@ const LIMIT: u32 = 30;
 
 /// Check if the user is inactive.
 async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> usize {
+    if user.is_admin
+        || config.inactive.exclude.contains(&user.username)
+        || config.inactive.source_id_exclude.contains(&user.source_id)
+        || (!config.inactive.source_id.is_empty()
+            && !config.inactive.source_id.contains(&user.source_id))
+    {
+        tracing::info!(
+            "{admin_user} `@{}` with source_id `{}` is excluded from the inactive check.",
+            user.username,
+            user.source_id,
+            admin_user = if user.is_admin { "Admin" } else { "User" }
+        );
+        return 0;
+    }
+
     match forgejo_api::is_empty_heatmap(
         req_client,
         &config.forgejo.instance,

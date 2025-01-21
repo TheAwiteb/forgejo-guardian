@@ -15,6 +15,8 @@ pub struct ForgejoUser {
     pub html_url:   url::Url,
     /// Is admin
     pub is_admin:   bool,
+    /// The login source id
+    pub source_id:  u32,
     /// Username
     #[serde(rename = "login")]
     pub username:   String,

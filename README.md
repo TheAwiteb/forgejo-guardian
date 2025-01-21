@@ -177,6 +177,9 @@ When enabled, users that never did anything on the instance will be deleted.
 Inactive users configuration section, with the following fields:
 
 -   `enabled`: Enable the cleanup of inactive users, inactive feature need `read:user` scope (default: `false`)
+-   `exclude`: List of usernames to exclude from the cleanup (default: `[]`)
+-   `source_id`: List of source IDs to only consider users from (default: `[]`)
+-   `source_id_exclude`: List of source IDs to exclude users from (default: `[]`)
 -   `days`: The number of days that a new user is given to become active. (default: `30`)
 -   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `2`)
 -   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
@@ -193,6 +196,9 @@ The `inactive.req_interval` and `inactive.interval` have the following suffixes:
 [inactive]
 enabled = true
 days = 30
+exclude = ["some-user", "another-user"]
+source_id = [1, 2] # Only consider users from source IDs 1 and 2
+# source_id_exclude = [3, 4] # Exclude users from source IDs 3 and 4
 req_limit = 200
 req_interval = "10m"
 interval = "7d"
