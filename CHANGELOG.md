@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## unreleased
+### Added
+-  Add support for including and excluding users ([**#22**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/22)) ([`f07fdab`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f07fdaba7e9a37b87848e6d0bbb6b639c84cfd95))
 ### Fixed
 -  Exceed `inactive.req_limit` due to asynchronous user checking ([**#20**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/20)) ([`71a0c51`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/71a0c5114b69b4d15c2b9e41abbe80552ed0b234))
 
