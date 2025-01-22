@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 -  Add support for including and excluding users ([**#22**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/22)) ([`f07fdab`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f07fdaba7e9a37b87848e6d0bbb6b639c84cfd95))
 ### Fixed
+-  Check for the user activities for more than last 365 days ([`e41b9b3`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/e41b9b36f67ff465731a20c1baaca9a9e6440bd0))
 -  Exceed `inactive.req_limit` due to asynchronous user checking ([**#20**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/20)) ([`71a0c51`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/71a0c5114b69b4d15c2b9e41abbe80552ed0b234))
 
 ## [0.4.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.3.1..v0.4.0) - 2025-01-19
