@@ -6,8 +6,8 @@ use crate::{
     forgejo_api,
 };
 
-/// Returns whether the heatmap is empty.
-pub async fn is_empty_heatmap(
+/// Returns whether the feeds is empty.
+pub async fn is_empty_feeds(
     client: &Client,
     instance: &Url,
     token: &str,
@@ -17,7 +17,7 @@ pub async fn is_empty_heatmap(
         Method::GET,
         instance,
         token,
-        &format!("/api/v1/users/{username}/heatmap"),
+        &format!("/api/v1/users/{username}/activities/feeds"),
     );
     let url = req.url().clone();
     let res = client.execute(req).await?;
@@ -29,7 +29,7 @@ pub async fn is_empty_heatmap(
         ));
     }
 
-    tracing::debug!("Get heatmap response: {res:?}");
+    tracing::debug!("Get feeds response: {res:?}");
 
     Ok(res.text().await.unwrap_or_default().trim() == "[]")
 }

@@ -3,14 +3,14 @@
 
 //! Simple SDK for Forgejo API, only for banning users and getting users.
 
+mod activity_feed;
 mod ban_user;
 mod get_users;
-mod heatmap;
 mod user;
 
+pub use activity_feed::*;
 pub use ban_user::*;
 pub use get_users::*;
-pub use heatmap::*;
 use reqwest::{Method, Request};
 pub use user::*;
 

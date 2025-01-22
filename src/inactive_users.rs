@@ -33,7 +33,7 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
         return 0;
     }
 
-    match forgejo_api::is_empty_heatmap(
+    match forgejo_api::is_empty_feeds(
         req_client,
         &config.forgejo.instance,
         &config.forgejo.token,
