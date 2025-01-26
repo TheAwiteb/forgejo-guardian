@@ -6,12 +6,14 @@
 mod activity_feed;
 mod ban_user;
 mod get_users;
+mod tokens;
 mod user;
 
 pub use activity_feed::*;
 pub use ban_user::*;
 pub use get_users::*;
 use reqwest::{Method, Request};
+pub use tokens::*;
 pub use user::*;
 
 /// Build a request with the given method, instance, token and endpoint.

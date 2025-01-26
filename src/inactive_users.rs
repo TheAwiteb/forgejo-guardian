@@ -8,6 +8,7 @@ use std::{
 
 use reqwest::Client;
 use tokio_util::sync::CancellationToken;
+use url::Url;
 
 use crate::{
     config::{BanAction, Config},
@@ -15,6 +16,65 @@ use crate::{
 };
 
 const LIMIT: u32 = 30;
+
+/// Returns true if the user has no tokens or `is_enabled` is false.
+///
+/// If there is an error while fetching the tokens, it will return false.
+async fn is_empty_tokens(
+    client: &Client,
+    instance: &Url,
+    token: &str,
+    username: &str,
+    is_enabled: bool,
+) -> bool {
+    if !is_enabled {
+        return true;
+    }
+
+    match forgejo_api::is_empty_tokens(client, instance, token, username).await {
+        Ok(value) => value,
+        Err(err) => {
+            tracing::error!("Error while get user `@{}` tokens: {err}", username);
+            false
+        }
+    }
+}
+
+/// Returns true if the user has no apps or `is_enabled` is false.
+///
+/// If there is an error while fetching the apps, it will return false.
+async fn is_empty_apps(
+    client: &Client,
+    instance: &Url,
+    token: &str,
+    username: &str,
+    is_enabled: bool,
+) -> bool {
+    if !is_enabled {
+        return true;
+    }
+
+    match forgejo_api::is_empty_apps(client, instance, token, username).await {
+        Ok(value) => value,
+        Err(err) => {
+            tracing::error!("Error while get user `@{}` tokens: {err}", username);
+            false
+        }
+    }
+}
+
+/// Returns true if the tokens and apps are empty
+async fn is_empty_tokens_and_apps(
+    client: &Client,
+    instance: &Url,
+    token: &str,
+    username: &str,
+    tokens_enabled: bool,
+    apps_enabled: bool,
+) -> bool {
+    is_empty_tokens(client, instance, token, username, tokens_enabled).await
+        && is_empty_apps(client, instance, token, username, apps_enabled).await
+}
 
 /// Check if the user is inactive.
 async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> usize {
@@ -33,15 +93,25 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
         return 0;
     }
 
-    match forgejo_api::is_empty_feeds(
-        req_client,
-        &config.forgejo.instance,
-        &config.forgejo.token,
-        &user.username,
-    )
-    .await
-    {
-        Ok(true) => {
+    match (
+        forgejo_api::is_empty_feeds(
+            req_client,
+            &config.forgejo.instance,
+            &config.forgejo.token,
+            &user.username,
+        )
+        .await,
+        is_empty_tokens_and_apps(
+            req_client,
+            &config.forgejo.instance,
+            &config.forgejo.token,
+            &user.username,
+            config.inactive.check_tokens,
+            config.inactive.check_oauth2,
+        )
+        .await,
+    ) {
+        (Ok(true), true) => {
             tracing::info!("User `@{}` is inactive.", user.username);
             if !config.dry_run {
                 if let Err(err) = forgejo_api::ban_user(
@@ -55,16 +125,19 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
                 {
                     tracing::error!("Error while ban inactive user `@{}`: {err}", user.username);
                 }
-                return 2; // heatmap and purge request}
+                // activity feed, purge request and tokens (if sended)
+                return 2
+                    + usize::from(config.inactive.check_tokens)
+                    + usize::from(config.inactive.check_oauth2);
             }
         }
-        Err(err) => {
+        (Err(err), ..) => {
             tracing::error!("{err}");
         }
         _ => {}
     }
 
-    1 // only heatmap request
+    1 // only activity feed request
 }
 
 /// Check all the instance users and delete the inactive ones.
@@ -131,8 +204,7 @@ async fn inactive_checker(
             }
         };
         for user in users {
-            // +2 Because the next check need 1~2 requests
-            if (reqs + 2) > config.inactive.req_limit.into() {
+            if (reqs + 4) > config.inactive.req_limit.into() {
                 if wait_interval().await {
                     tracing::warn!("Inactive users checker stopped while checking users.");
                     break 'main_loop;
