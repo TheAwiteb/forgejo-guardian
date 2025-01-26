@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Ability to check user tokens and oauth2 apps ([**#25**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/25)) ([`1e90760`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/1e907609cd9fae24e58cbe9eab99cc4b88459cb3))
     - **BC**:  The minimum value for `inactive.req_limit` changed to 4
 -  Ability to enter seconds in the interval without `s` suffix ([**#28**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/28)) ([`c9dfc6e`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c9dfc6e57acdfbdbc2485d729ce24edcab292224))
+-  Make `expressions.interval` suffixably ([**#29**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/29)) ([`e32aca7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/e32aca7164669532ca08ee356fc01aaf6185aa67))
 
 ## [0.4.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.0..v0.4.1) - 2025-01-22
 ### Added
