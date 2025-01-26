@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## unreleased
+### Added
+-  Ability to check user tokens and oauth2 apps ([**#25**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/25)) ([`1e90760`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/1e907609cd9fae24e58cbe9eab99cc4b88459cb3))
+    - **BC**:  The minimum value for `inactive.req_limit` changed to 4
+
 ## [0.4.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.0..v0.4.1) - 2025-01-22
 ### Added
 -  Add support for including and excluding users ([**#22**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/22)) ([`f07fdab`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f07fdaba7e9a37b87848e6d0bbb6b639c84cfd95))
