@@ -121,8 +121,19 @@ pub fn suffix_interval<'de, D>(des: D) -> Result<u32, D::Error>
 where
     D: de::Deserializer<'de>,
 {
-    let interval = String::deserialize(des)
-        .map_err(|_| de::Error::custom("Expected a suffixed interval, e.g. 1s, 2m"))?;
+    let toml_value = Value::deserialize(des)?;
+
+    if let Value::Integer(interval) = toml_value {
+        return u32::try_from(interval)
+            .map_err(|_| de::Error::custom("It is a negative number, it must be positive"));
+    }
+
+    let Value::String(interval) = toml_value else {
+        return Err(de::Error::custom(
+            "Expected a suffixed interval, e.g. 1s, 2m",
+        ));
+    };
+
     if interval.chars().count() < 2 {
         return Err(de::Error::custom(format!(
             "Expected a suffixed interval, e.g. 1s, 2m. found {interval}"
@@ -142,10 +153,10 @@ where
     })?;
     let suffix = interval.chars().last().expect("the length more than 2");
     let interval = match suffix {
-        's' => number,
-        'm' => number * 60,
-        'h' => number * 60 * 60,
-        'd' => number * 24 * 60 * 60,
+        's' => Some(number),
+        'm' => number.checked_mul(60),
+        'h' => number.checked_mul(60 * 60),
+        'd' => number.checked_mul(24 * 60 * 60),
         _ => {
             return Err(de::Error::custom(format!(
                 "Unknown suffix `{suffix}`, expected s, m, h, d"
@@ -153,7 +164,9 @@ where
         }
     };
 
-    Ok(interval)
+    interval.ok_or_else(|| {
+        de::Error::custom("The interval is too large, the maximum value is 49710 days.")
+    })
 }
 
 /// Deserialize the deserializer into `T` then check if the value is greater
