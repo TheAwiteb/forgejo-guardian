@@ -222,7 +222,7 @@ interval = "7d"
 Expressions configuration section, with the following fields:
 
 -   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
--   `interval`: Interval to check for new users in seconds (default: `300`)
+-   `interval`: Interval to check for new users in seconds (default: `300s`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
 -   `ban_alert`: Send a notification when a user is banned (default: `false`)
 -   `ban_action`: The action to take when a user is banned, can be one of the following:
@@ -234,6 +234,14 @@ Expressions configuration section, with the following fields:
         reactivate the user, from the dashboard.
 -   `ban`: Regular expressions to match against to ban the user
 -   `sus`: Regular expressions to match against to alert the admins
+
+The `expressions.interval` have the following suffixes:
+
+-   `s`: Seconds
+-   `m`: Minutes
+-   `h`: Hours
+-   `d`: Days
+
 
 `ban` and `sus` are tables, and each one have the following fields:
 

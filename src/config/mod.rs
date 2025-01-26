@@ -178,7 +178,10 @@ pub struct Exprs {
     #[serde(default)]
     pub only_new_users: bool,
     /// Interval to check for new users in seconds
-    #[serde(default = "defaults::expressions::interval")]
+    #[serde(
+        default = "defaults::expressions::interval",
+        deserialize_with = "deserializers::suffix_interval"
+    )]
     pub interval:       u32,
     /// Limit of users to fetch in each interval
     #[serde(default = "defaults::expressions::limit")]
