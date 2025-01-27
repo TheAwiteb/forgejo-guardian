@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **BC**:  The minimum value for `inactive.req_limit` changed to 4
 -  Ability to enter seconds in the interval without `s` suffix ([**#28**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/28)) ([`c9dfc6e`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c9dfc6e57acdfbdbc2485d729ce24edcab292224))
 -  Make `expressions.interval` suffixably ([**#29**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/29)) ([`e32aca7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/e32aca7164669532ca08ee356fc01aaf6185aa67))
+### Fixed
+-  Guardian checks all instance users when `expressions.only_new_users` is `false` ([**#27**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/27)) ([`cf05a68`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/cf05a68c22f1eeffc3308856c7117ff6d82855da))
 
 ## [0.4.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.0..v0.4.1) - 2025-01-22
 ### Added
