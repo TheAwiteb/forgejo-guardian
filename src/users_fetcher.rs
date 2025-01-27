@@ -118,8 +118,16 @@ async fn check_new_users(
                     user,
                     &request_client,
                     &config,
-                    Some(&sus_sender),
-                    Some(&ban_sender),
+                    config
+                        .telegram
+                        .is_enabled()
+                        .is_some()
+                        .then_some(&sus_sender),
+                    config
+                        .telegram
+                        .is_enabled()
+                        .is_some()
+                        .then_some(&ban_sender),
                 )
                 .await;
             }

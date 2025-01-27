@@ -14,6 +14,10 @@ pub trait ExprChecker {
 
 impl ExprChecker for Expr {
     fn is_match<'a>(&'a self, user: &ForgejoUser) -> Option<RegexReason> {
+        if !self.enabled {
+            return None;
+        }
+
         let one_of = |hay: &str, exprs: &'a Vec<RegexReason>| {
             // Join the user bio into a single line
             // ref: https://git.4rs.nl/awiteb/forgejo-guardian/issues/2
