@@ -186,6 +186,18 @@ pub struct Exprs {
     /// Limit of users to fetch in each interval
     #[serde(default = "defaults::expressions::limit")]
     pub limit:          u32,
+    /// Maximum number of requests to send
+    #[serde(
+        default = "defaults::expressions::req_limit",
+        deserialize_with = "deserializers::unsigned_minimum::<_, _, 1>"
+    )]
+    pub req_limit:      u32,
+    /// Interval when hitting the request limit
+    #[serde(
+        default = "defaults::expressions::req_interval",
+        deserialize_with = "deserializers::suffix_interval"
+    )]
+    pub req_interval:   u32,
     /// Action to take when banning a user
     #[serde(default = "defaults::expressions::ban_action")]
     pub ban_action:     BanAction,
@@ -294,6 +306,8 @@ impl Default for Exprs {
             ban_alert:      false,
             interval:       defaults::expressions::interval(),
             limit:          defaults::expressions::limit(),
+            req_limit:      defaults::expressions::req_limit(),
+            req_interval:   defaults::expressions::req_interval(),
             ban_action:     defaults::expressions::ban_action(),
             ban:            Expr::default(),
             sus:            Expr::default(),

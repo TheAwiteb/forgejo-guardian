@@ -43,22 +43,22 @@ async fn get_new_users(
     .collect())
 }
 
-/// Check if ban or suspect a new user
+/// Check if ban or suspect a new user, returns `true` if the ban request sended
 async fn check_new_user(
     user: ForgejoUser,
     request_client: &reqwest::Client,
     config: &Config,
-    sus_sender: &Sender<(ForgejoUser, RegexReason)>,
-    ban_sender: &Sender<(ForgejoUser, RegexReason)>,
-) {
+    sus_sender: Option<&Sender<(ForgejoUser, RegexReason)>>,
+    ban_sender: Option<&Sender<(ForgejoUser, RegexReason)>>,
+) -> bool {
     if let Some(re) = config.expressions.ban.is_match(&user) {
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
-            if config.expressions.ban_alert {
-                ban_sender.send((user, re)).await.ok();
+            if config.expressions.ban_alert && ban_sender.is_some() {
+                ban_sender.unwrap().send((user, re)).await.ok();
             }
-            return;
+            return false;
         }
 
         if let Err(err) = forgejo_api::ban_user(
@@ -71,13 +71,15 @@ async fn check_new_user(
         .await
         {
             tracing::error!("Error while banning a user: {err}");
-        } else if config.expressions.ban_alert {
-            ban_sender.send((user, re)).await.ok();
+        } else if config.expressions.ban_alert && ban_sender.is_some() {
+            ban_sender.unwrap().send((user, re)).await.ok();
         }
-    } else if let Some(re) = config.expressions.sus.is_match(&user) {
+        return true;
+    } else if let Some(re) = sus_sender.and(config.expressions.sus.is_match(&user)) {
         tracing::info!("@{} has been suspected because `{re}`", user.username);
-        sus_sender.send((user, re)).await.ok();
+        sus_sender.unwrap().send((user, re)).await.ok();
     }
+    false
 }
 
 /// Check for new users and send the suspected users to the channel and ban the
@@ -107,12 +109,19 @@ async fn check_new_users(
                 last_user_id.store(uid, Ordering::Relaxed);
             }
 
-            if config.expressions.only_new_users && is_first_fetch {
+            if is_first_fetch {
                 return;
             }
 
             for user in new_users {
-                check_new_user(user, &request_client, &config, &sus_sender, &ban_sender).await;
+                check_new_user(
+                    user,
+                    &request_client,
+                    &config,
+                    Some(&sus_sender),
+                    Some(&ban_sender),
+                )
+                .await;
             }
         }
         Err(err) => {
@@ -149,5 +158,73 @@ pub async fn users_fetcher(
                 break
             }
         };
+    }
+}
+
+/// Check for old users and ban them if they match the ban expressions. This
+/// will not sned any alerts
+pub async fn old_users(config: Arc<Config>, cancellation_token: CancellationToken) {
+    tracing::info!("Starting old users fetcher");
+
+    let wait_interval = || {
+        async {
+            tracing::debug!(
+                "Reached the request limit for old users checker. Waiting for {} seconds.",
+                config.expressions.req_interval
+            );
+            tokio::select! {
+                _ = tokio::time::sleep(Duration::from_secs(config.expressions.req_interval.into())) => false,
+                _ = cancellation_token.cancelled() => true,
+            }
+        }
+    };
+
+    let client = reqwest::Client::new();
+    let mut reqs = 0;
+    let mut page = 1;
+
+    'main_loop: loop {
+        // Enter the block if we cancelled, so will break
+        if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
+            if wait_interval().await {
+                break;
+            }
+            reqs = 0
+        }
+        reqs += 1;
+
+        let Ok(users) = forgejo_api::get_users(
+            &client,
+            &config.forgejo.instance,
+            &config.forgejo.token,
+            config.expressions.limit,
+            page,
+            "oldest",
+        )
+        .await
+        else {
+            tracing::error!("Falid to fetch old users");
+            continue;
+        };
+
+        if users.is_empty() {
+            tracing::info!("No more old users to check, all instance users are checked.");
+            break;
+        }
+
+        for user in users {
+            if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
+                if wait_interval().await {
+                    break 'main_loop;
+                }
+                reqs = 0;
+            }
+
+            if check_new_user(user, &client, &config, None, None).await {
+                reqs += 1;
+            }
+        }
+
+        page += 1;
     }
 }

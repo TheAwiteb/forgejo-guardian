@@ -116,6 +116,13 @@ async fn try_main() -> error::GuardResult<()> {
             sus_sender,
             ban_sender,
         ));
+
+        if !config.expressions.only_new_users {
+            tokio::spawn(users_fetcher::old_users(
+                Arc::clone(&config),
+                cancellation_token.clone(),
+            ));
+        }
     }
 
     if let Some(telegram) = config.telegram.is_enabled() {

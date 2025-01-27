@@ -23,6 +23,14 @@ pub mod expressions {
     pub const fn ban_action() -> BanAction {
         BanAction::Purge
     }
+
+    pub const fn req_limit() -> u32 {
+        200
+    }
+
+    pub const fn req_interval() -> u32 {
+        10 * 60
+    }
 }
 
 /// Default configuration for inactive section.
