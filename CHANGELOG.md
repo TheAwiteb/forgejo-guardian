@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Make `expressions.interval` suffixably ([**#29**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/29)) ([`e32aca7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/e32aca7164669532ca08ee356fc01aaf6185aa67))
 ### Fixed
 -  Guardian checks all instance users when `expressions.only_new_users` is `false` ([**#27**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/27)) ([`cf05a68`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/cf05a68c22f1eeffc3308856c7117ff6d82855da))
+-  Prevent async deadlock when Telegram is disabled ([**#31**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/31)) ([`2ee7849`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2ee784916305d32705d6a667ce1979c47f67874f))
 
 ## [0.4.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.0..v0.4.1) - 2025-01-22
 ### Added
