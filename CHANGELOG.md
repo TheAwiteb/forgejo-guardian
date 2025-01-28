@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## unreleased
+
 ## [0.5.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.1..v0.5.0) - 2025-01-28
 ### Added
 -  Ability to check user tokens and oauth2 apps ([**#25**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/25)) ([`1e90760`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/1e907609cd9fae24e58cbe9eab99cc4b88459cb3))
