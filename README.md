@@ -320,6 +320,10 @@ You can remove the `FORGEJO_GUARDIAN_CONFIG` environment variable from the comma
 
 If you would like to contribute by adding a new language, you can do that by adding your language file in the `locales` directory, and then add it to `Lang` enum in `src/telegram_bot/mod.rs` file. Then you can use it in the configuration file.
 
+## Mirrors
+- [Codeberg](https://codeberg.org/awiteb/forgejo-guardian)
+- [GitHub](https://github.com/theawiteb/forgejo-guardian)
+
 ## License
 
 This project is licensed under the [AGPL-3.0-or-later](https://www.gnu.org/licenses/agpl-3.0.html) license.
