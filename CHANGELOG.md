@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## unreleased
+### Added
+-  Enhance ban/sus logs to display the location ([**#33**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/33)) ([`f39e874`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f39e874446baf647c3697e5fa8287a604b99b7f5))
 
 ## [0.5.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.4.1..v0.5.0) - 2025-01-28
 ### Added
