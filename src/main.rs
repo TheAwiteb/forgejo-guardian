@@ -118,6 +118,17 @@ async fn try_main() -> error::GuardResult<()> {
         ));
 
         if !config.expressions.only_new_users {
+            tracing::info!(
+                config = "expressions",
+                "Request limit for old users: {}",
+                config.expressions.req_limit
+            );
+            tracing::info!(
+                config = "expressions",
+                "Interval when hitting the limit for old users: {} seconds",
+                config.expressions.req_interval
+            );
+
             tokio::spawn(users_fetcher::old_users(
                 Arc::clone(&config),
                 cancellation_token.clone(),
