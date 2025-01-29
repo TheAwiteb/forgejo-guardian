@@ -2,7 +2,7 @@
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
 use crate::{
-    config::{Expr, RegexReason},
+    config::{locations::Locations, Expr, RegexReason},
     forgejo_api::ForgejoUser,
 };
 
@@ -29,17 +29,17 @@ impl ExprChecker for Expr {
             exprs
                 .iter()
                 .find(|re_re| re_re.re_vec.iter().all(|re| re.is_match(&hay)))
+                .cloned()
         };
         [
-            one_of(&user.username, &self.usernames),
-            one_of(&user.full_name, &self.full_names),
-            one_of(&user.biography, &self.biographies),
-            one_of(&user.email, &self.emails),
-            one_of(&user.website, &self.websites),
-            one_of(&user.location, &self.locations),
+            one_of(&user.username, &self.usernames).map(|r| r.location(Locations::Username)),
+            one_of(&user.full_name, &self.full_names).map(|r| r.location(Locations::FullName)),
+            one_of(&user.biography, &self.biographies).map(|r| r.location(Locations::Biographie)),
+            one_of(&user.email, &self.emails).map(|r| r.location(Locations::Email)),
+            one_of(&user.website, &self.websites).map(|r| r.location(Locations::Website)),
+            one_of(&user.location, &self.locations).map(|r| r.location(Locations::Location)),
         ]
         .into_iter()
         .find_map(|v| v)
-        .cloned()
     }
 }

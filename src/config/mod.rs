@@ -18,8 +18,11 @@ use crate::telegram_bot::Lang;
 mod boolean;
 mod defaults;
 mod deserializers;
+pub mod locations;
 pub mod parse_invalid;
 mod utils;
+
+use locations::Locations;
 
 /// Ban action to take when banning a user
 #[derive(Debug, Deserialize)]
@@ -126,6 +129,8 @@ pub struct RegexReason {
     pub re_vec: Vec<Regex>,
     /// Optional reason
     pub reason: Option<String>,
+    /// The location where the regex got matched
+    location:   Locations,
 }
 
 /// The expression
@@ -246,8 +251,18 @@ impl BanAction {
 
 impl RegexReason {
     /// Create a new `RegexReason` instance
-    fn new(re: Vec<Regex>, reason: Option<String>) -> Self {
-        Self { re_vec: re, reason }
+    pub fn new(re: Vec<Regex>, reason: Option<String>) -> Self {
+        Self {
+            re_vec: re,
+            reason,
+            location: Locations::Unknown,
+        }
+    }
+
+    /// Set the location of the regex
+    pub fn location(mut self, location: Locations) -> Self {
+        self.location = location;
+        self
     }
 }
 
@@ -263,13 +278,17 @@ impl Telegram {
 
 impl Display for RegexReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for re in &self.re_vec {
-            write!(f, "{re} ").ok();
+        for (idx, re) in self.re_vec.iter().enumerate() {
+            if idx == (self.re_vec.len() - 1) {
+                write!(f, "{re}").ok();
+            } else {
+                write!(f, "{re}, ").ok();
+            }
         }
         if let Some(ref reason) = self.reason {
             write!(f, " ({reason})").ok();
         };
-        Ok(())
+        write!(f, " in their {}", self.location)
     }
 }
 
