@@ -281,6 +281,10 @@ usernames = ['^mod.*$']
 ```
 
 > [!TIP]
+> You can start your regular expression with `(?i)` to make it case-insensitive.
+> For example, `(?i)^.*admin.*$` will match `Admin`, `ADMIN`, `admin`, etc.
+
+> [!TIP]
 > Make sure to set `interval` and `limit` to a reasonable values based on your
 > instance size and the number of new users. If your instance is small, you can
 > set `interval` to a higher value (something like `600`) and `limit` to a lower
