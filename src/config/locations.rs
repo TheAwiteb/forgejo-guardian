@@ -22,7 +22,7 @@ impl fmt::Display for Locations {
             Locations::Unknown => write!(f, "unknown"),
             Locations::Username => write!(f, "username"),
             Locations::FullName => write!(f, "full name"),
-            Locations::Biographie => write!(f, "biographie"),
+            Locations::Biographie => write!(f, "biography"),
             Locations::Email => write!(f, "email"),
             Locations::Website => write!(f, "website"),
             Locations::Location => write!(f, "location"),
