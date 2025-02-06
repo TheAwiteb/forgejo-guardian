@@ -207,7 +207,7 @@ pub async fn old_users(config: Arc<Config>, cancellation_token: CancellationToke
             &config.forgejo.token,
             config.expressions.limit,
             page,
-            "oldest",
+            "newest",
         )
         .await
         else {
