@@ -222,6 +222,9 @@ interval = "7d"
 Expressions configuration section, with the following fields:
 
 -   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
+-   `safe_mode`: Prevents purge active users immediately. If a user matches the
+    ban expressions but is active, a ban request is sent to the moderation team
+    for review instead of purge the user directly
 -   `interval`: Interval to check for new users in seconds (default: `300s`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
 -   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`) *

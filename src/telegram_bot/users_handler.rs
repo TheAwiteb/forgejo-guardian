@@ -10,13 +10,14 @@ use teloxide::{
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
+use super::UserAlert;
 use crate::{
-    config::{Config, RegexReason, TelegramData},
+    config::{BanAction, Config, RegexReason, TelegramData},
     forgejo_api::ForgejoUser,
 };
 
-/// Create an inline keyboard of the suspicious user
-fn make_sus_inline_keyboard(sus_user: &ForgejoUser, action: &str) -> InlineKeyboardMarkup {
+/// Create an inline keyboard ask to ban or ignore the user
+fn make_ban_ignore_keyboard(user: &ForgejoUser, action: &str) -> InlineKeyboardMarkup {
     let button = |text: &str, callback: String| {
         InlineKeyboardButton::new(text, InlineKeyboardButtonKind::CallbackData(callback))
     };
@@ -24,7 +25,7 @@ fn make_sus_inline_keyboard(sus_user: &ForgejoUser, action: &str) -> InlineKeybo
     InlineKeyboardMarkup::new([[
         button(
             t!("buttons.ban", action = action).as_ref(),
-            format!("b {}", sus_user.username),
+            format!("b {}", user.username),
         ),
         button(t!("buttons.ignore").as_ref(), "ignore -".to_owned()),
     ]])
@@ -53,9 +54,18 @@ fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &str) -
         reason = re
             .reason
             .clone()
-            .unwrap_or_else(|| t!("words.not_found").to_string()),
+            .unwrap_or_else(|| t!("words.not_found").into_owned()),
     )
-    .to_string()
+    .into_owned()
+}
+
+/// Get the action word from the ban action
+fn action_word(ban_action: &BanAction) -> String {
+    if ban_action.is_purge() {
+        t!("words.purge").into_owned()
+    } else {
+        t!("words.suspend").into_owned()
+    }
 }
 
 /// Send a suspicious user alert to the admins
@@ -68,13 +78,8 @@ pub async fn send_sus_alert(
 ) -> ResponseResult<()> {
     tracing::info!("Sending suspicious user alert to the admins chat");
 
-    let action = if config.expressions.ban_action.is_purge() {
-        t!("words.purge")
-    } else {
-        t!("words.suspend")
-    };
-
-    let keyboard = make_sus_inline_keyboard(&sus_user, &action);
+    let action = action_word(&config.expressions.ban_action);
+    let keyboard = make_ban_ignore_keyboard(&sus_user, &action);
 
     let caption = user_details("messages.sus_alert", &sus_user, re, &action);
     bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
@@ -95,15 +100,32 @@ pub async fn send_ban_notify(
 ) -> ResponseResult<()> {
     tracing::info!("Sending ban notification to the admins chat");
 
-    let action = if config.expressions.ban_action.is_purge() {
-        t!("words.purge")
-    } else {
-        t!("words.suspend")
-    };
-
+    let action = action_word(&config.expressions.ban_action);
     let caption = user_details("messages.ban_notify", &sus_user, re, &action);
     bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
+        .await?;
+
+    Ok(())
+}
+
+/// Send a ban request to the admins chat
+pub async fn send_ban_request(
+    bot: &Bot,
+    telegram: &TelegramData,
+    re: &RegexReason,
+    user: ForgejoUser,
+    config: &Config,
+) -> ResponseResult<()> {
+    tracing::info!("Sending ban request to the admins chat");
+
+    let action = action_word(&config.expressions.ban_action);
+    let keyboard = make_ban_ignore_keyboard(&user, &action);
+    let caption = user_details("messages.ban_request", &user, re, &action);
+
+    bot.send_photo(telegram.chat, InputFile::url(user.avatar_url))
+        .caption(caption)
+        .reply_markup(keyboard)
         .await?;
 
     Ok(())
@@ -115,16 +137,20 @@ pub async fn users_handler(
     config: Arc<Config>,
     telegram: Arc<TelegramData>,
     cancellation_token: CancellationToken,
-    mut sus_receiver: Receiver<(ForgejoUser, RegexReason)>,
-    mut ban_receiver: Receiver<(ForgejoUser, RegexReason)>,
+    mut sus_receiver: Receiver<UserAlert>,
+    mut ban_receiver: Receiver<UserAlert>,
 ) {
     loop {
         tokio::select! {
-            Some((sus_user, re)) = sus_receiver.recv() => {
-                send_sus_alert(&bot, &telegram, &re, sus_user, &config).await.ok();
+            Some(alert) = sus_receiver.recv() => {
+                send_sus_alert(&bot, &telegram, &alert.reason, alert.user, &config).await.ok();
             }
-            Some((banned_user, re)) = ban_receiver.recv() => {
-                send_ban_notify(&bot,&telegram, &re, banned_user, &config).await.ok();
+            Some(alert) = ban_receiver.recv() => {
+                if alert.safe_mode {
+                    send_ban_request(&bot,&telegram, &alert.reason, alert.user, &config).await.ok();
+                } else {
+                    send_ban_notify(&bot,&telegram, &alert.reason, alert.user, &config).await.ok();
+                }
             }
             _ = cancellation_token.cancelled() => {
                 tracing::info!("sus users handler has been stopped successfully.");

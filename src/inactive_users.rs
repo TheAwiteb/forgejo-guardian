@@ -12,6 +12,7 @@ use url::Url;
 
 use crate::{
     config::{BanAction, Config},
+    error::GuardResult,
     forgejo_api::{self, ForgejoUser},
 };
 
@@ -76,6 +77,29 @@ async fn is_empty_tokens_and_apps(
         && is_empty_apps(client, instance, token, username, apps_enabled).await
 }
 
+/// Returns true if the user is inactive
+pub async fn is_inactive(
+    client: &Client,
+    instance: &Url,
+    token: &str,
+    username: &str,
+    tokens_enabled: bool,
+    apps_enabled: bool,
+) -> GuardResult<bool> {
+    Ok(
+        forgejo_api::is_empty_feeds(client, instance, token, username).await?
+            && is_empty_tokens_and_apps(
+                client,
+                instance,
+                token,
+                username,
+                tokens_enabled,
+                apps_enabled,
+            )
+            .await,
+    )
+}
+
 /// Check if the user is inactive.
 async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> usize {
     if user.is_admin
@@ -93,25 +117,17 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
         return 0;
     }
 
-    match (
-        forgejo_api::is_empty_feeds(
-            req_client,
-            &config.forgejo.instance,
-            &config.forgejo.token,
-            &user.username,
-        )
-        .await,
-        is_empty_tokens_and_apps(
-            req_client,
-            &config.forgejo.instance,
-            &config.forgejo.token,
-            &user.username,
-            config.inactive.check_tokens,
-            config.inactive.check_oauth2,
-        )
-        .await,
-    ) {
-        (Ok(true), true) => {
+    match is_inactive(
+        req_client,
+        &config.forgejo.instance,
+        &config.forgejo.token,
+        &user.username,
+        config.inactive.check_tokens,
+        config.inactive.check_oauth2,
+    )
+    .await
+    {
+        Ok(true) => {
             tracing::info!("User `@{}` is inactive.", user.username);
             if !config.dry_run {
                 if let Err(err) = forgejo_api::ban_user(
@@ -131,7 +147,7 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
                     + usize::from(config.inactive.check_oauth2);
             }
         }
-        (Err(err), ..) => {
+        Err(err) => {
             tracing::error!("{err}");
         }
         _ => {}

@@ -19,6 +19,42 @@ fn check_warnings(config: &Config) {
              process."
         );
     }
+
+    if config.expressions.sus.enabled && config.telegram.is_enabled().is_none() {
+        tracing::warn!(
+            "The suspicious users expressions are enabled but the Telegram bot is disabled, the \
+             suspicious users will not be alerted"
+        );
+    }
+}
+
+/// Checks for errors in the config
+fn check_errors(config: &Config) -> GuardResult<()> {
+    if config.expressions.safe_mode {
+        if !config.expressions.ban_action.is_purge() {
+            return Err(GuardError::Other(
+                "Safe mode is enabled, but the ban action is not set to `purge`, there is no \
+                 point in enabling safe mode if the ban action is not set to `purge`"
+                    .to_owned(),
+            ));
+        }
+        if config.expressions.req_limit < 4 {
+            return Err(GuardError::Other(
+                "Safe mode is enabled, it's need more requests to check if the user is inactive \
+                 or not, so the request limit must be greater than 3"
+                    .to_owned(),
+            ));
+        }
+        if config.telegram.is_enabled().is_none() {
+            return Err(GuardError::Other(
+                "Safe mode is enabled, but the Telegram bot is disabled, the safe mode need to \
+                 send a ban request to the modiration team"
+                    .to_owned(),
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 /// Checks if the Forgejo token is specified as an environment variable.
@@ -61,6 +97,7 @@ pub fn get_config() -> GuardResult<Config> {
         toml::from_str(&fs::read_to_string(&config_path)?).map_err(GuardError::from)?;
 
     check_warnings(&config);
+    check_errors(&config)?;
     check_forgejo_token(&mut config)?;
     if let Telegram::Invalid(toml_value) = &config.telegram {
         return Err(GuardError::Other(format!(

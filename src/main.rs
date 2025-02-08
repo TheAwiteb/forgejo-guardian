@@ -25,12 +25,10 @@ async fn try_main() -> error::GuardResult<()> {
     let cancellation_token = CancellationToken::new();
     // Suspicious users are sent and received in this channel, users who meet the
     // `alert` expressions
-    let (sus_sender, sus_receiver) =
-        sync::mpsc::channel::<(forgejo_api::ForgejoUser, config::RegexReason)>(100);
+    let (sus_sender, sus_receiver) = sync::mpsc::channel::<telegram_bot::UserAlert>(100);
     // Banned users (already banned) are sent and received in this channel, this
     // to alert the admins on Telegram if `ban_alert` is set to true
-    let (ban_sender, ban_receiver) =
-        sync::mpsc::channel::<(forgejo_api::ForgejoUser, config::RegexReason)>(100);
+    let (ban_sender, ban_receiver) = sync::mpsc::channel::<telegram_bot::UserAlert>(100);
 
     tracing::info!("Forgejo instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
@@ -89,6 +87,11 @@ async fn try_main() -> error::GuardResult<()> {
         );
         tracing::info!(
             config = "expressions",
+            "Safe mode: {}",
+            config.expressions.safe_mode
+        );
+        tracing::info!(
+            config = "expressions",
             "Only fetch new users: {}",
             config.expressions.only_new_users
         );
@@ -102,13 +105,6 @@ async fn try_main() -> error::GuardResult<()> {
             "Users to fetch per request: {}",
             config.expressions.limit
         );
-
-        if config.expressions.sus.enabled && config.telegram.is_enabled().is_none() {
-            tracing::warn!(
-                "The suspicious users expressions are enabled but the Telegram bot is disabled, \
-                 the suspicious users will not be alerted"
-            );
-        }
 
         tokio::spawn(users_fetcher::users_fetcher(
             Arc::clone(&config),

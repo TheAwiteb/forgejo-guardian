@@ -20,6 +20,33 @@ use crate::{
     forgejo_api::ForgejoUser,
 };
 
+/// Type to represent a user alert
+pub struct UserAlert {
+    /// The user that has been alerted, suspect or banned
+    user:      ForgejoUser,
+    /// The reason why the user has been alerted
+    reason:    RegexReason,
+    /// Safe mode is enabled
+    safe_mode: bool,
+}
+
+impl UserAlert {
+    /// Create a new user alert
+    pub fn new(user: ForgejoUser, reason: RegexReason) -> Self {
+        Self {
+            user,
+            reason,
+            safe_mode: false,
+        }
+    }
+
+    /// Set a value to the safe mode
+    pub fn safe_mode(mut self) -> Self {
+        self.safe_mode = true;
+        self
+    }
+}
+
 /// Language of the telegram bot
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -45,8 +72,8 @@ pub async fn start_bot(
     config: Arc<Config>,
     telegram: TelegramData,
     cancellation_token: CancellationToken,
-    sus_receiver: Receiver<(ForgejoUser, RegexReason)>,
-    ban_receiver: Receiver<(ForgejoUser, RegexReason)>,
+    sus_receiver: Receiver<UserAlert>,
+    ban_receiver: Receiver<UserAlert>,
 ) {
     tracing::info!("Starting the telegram bot");
 

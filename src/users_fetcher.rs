@@ -13,9 +13,11 @@ use tokio::sync::mpsc::Sender;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    config::{Config, RegexReason},
+    config::Config,
     error::GuardResult,
     forgejo_api::{self, get_users, ForgejoUser},
+    inactive_users,
+    telegram_bot::UserAlert,
     traits::ExprChecker,
 };
 
@@ -43,22 +45,60 @@ async fn get_new_users(
     .collect())
 }
 
-/// Check if ban or suspect a new user, returns `true` if the ban request sended
+/// Check if the user is protected from being banned
+async fn is_user_protected(
+    request_client: &reqwest::Client,
+    config: &Config,
+    user: &ForgejoUser,
+    ban_sender: &Option<&Sender<UserAlert>>,
+) -> GuardResult<bool> {
+    Ok(config.expressions.safe_mode
+        && ban_sender.is_some()
+        && !inactive_users::is_inactive(
+            request_client,
+            &config.forgejo.instance,
+            &config.forgejo.token,
+            &user.username,
+            config.inactive.check_tokens,
+            config.inactive.check_oauth2,
+        )
+        .await?)
+}
+
+/// Check if ban or suspect a new user, returns the number of sended requests
 async fn check_new_user(
     user: ForgejoUser,
     request_client: &reqwest::Client,
     config: &Config,
-    sus_sender: Option<&Sender<(ForgejoUser, RegexReason)>>,
-    ban_sender: Option<&Sender<(ForgejoUser, RegexReason)>>,
-) -> bool {
+    sus_sender: Option<&Sender<UserAlert>>,
+    ban_sender: Option<&Sender<UserAlert>>,
+) -> u32 {
     if let Some(re) = config.expressions.ban.is_match(&user) {
+        if is_user_protected(request_client, config, &user, &ban_sender)
+            .await
+            .unwrap_or(true)
+        //  | ^^^^^
+        //  | If there is an error don't send ban request
+        {
+            ban_sender
+                .unwrap()
+                .send(UserAlert::new(user, re).safe_mode())
+                .await
+                .ok();
+            return 3;
+        }
+
         tracing::info!("@{} has been banned because `{re}`", user.username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
             if config.expressions.ban_alert && ban_sender.is_some() {
-                ban_sender.unwrap().send((user, re)).await.ok();
+                ban_sender
+                    .unwrap()
+                    .send(UserAlert::new(user, re))
+                    .await
+                    .ok();
             }
-            return false;
+            return 0;
         }
 
         if let Err(err) = forgejo_api::ban_user(
@@ -72,14 +112,26 @@ async fn check_new_user(
         {
             tracing::error!("Error while banning a user: {err}");
         } else if config.expressions.ban_alert && ban_sender.is_some() {
-            ban_sender.unwrap().send((user, re)).await.ok();
+            ban_sender
+                .unwrap()
+                .send(UserAlert::new(user, re))
+                .await
+                .ok();
         }
-        return true;
+        return if config.expressions.safe_mode && ban_sender.is_some() {
+            4
+        } else {
+            1
+        };
     } else if let Some(re) = sus_sender.and(config.expressions.sus.is_match(&user)) {
         tracing::info!("@{} has been suspected because `{re}`", user.username);
-        sus_sender.unwrap().send((user, re)).await.ok();
+        sus_sender
+            .unwrap()
+            .send(UserAlert::new(user, re))
+            .await
+            .ok();
     }
-    false
+    0
 }
 
 /// Check for new users and send the suspected users to the channel and ban the
@@ -88,8 +140,8 @@ async fn check_new_users(
     last_user_id: Arc<AtomicUsize>,
     request_client: Arc<reqwest::Client>,
     config: Arc<Config>,
-    sus_sender: Sender<(ForgejoUser, RegexReason)>,
-    ban_sender: Sender<(ForgejoUser, RegexReason)>,
+    sus_sender: Sender<UserAlert>,
+    ban_sender: Sender<UserAlert>,
 ) {
     let is_first_fetch = last_user_id.load(Ordering::Relaxed) == 0;
     match get_new_users(
@@ -143,8 +195,8 @@ async fn check_new_users(
 pub async fn users_fetcher(
     config: Arc<Config>,
     cancellation_token: CancellationToken,
-    sus_sender: Sender<(ForgejoUser, RegexReason)>,
-    ban_sender: Sender<(ForgejoUser, RegexReason)>,
+    sus_sender: Sender<UserAlert>,
+    ban_sender: Sender<UserAlert>,
 ) {
     let last_user_id = Arc::new(AtomicUsize::new(0));
     let request_client = Arc::new(reqwest::Client::new());
@@ -221,16 +273,14 @@ pub async fn old_users(config: Arc<Config>, cancellation_token: CancellationToke
         }
 
         for user in users {
-            if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
+            if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
                 if wait_interval().await {
                     break 'main_loop;
                 }
                 reqs = 0;
             }
 
-            if check_new_user(user, &client, &config, None, None).await {
-                reqs += 1;
-            }
+            reqs += check_new_user(user, &client, &config, None, None).await;
         }
 
         page += 1;

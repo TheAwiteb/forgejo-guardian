@@ -22,14 +22,25 @@ ban_notify = """User has been banned (%{action}) ⛔
 • Profile: %{profile}
 • Reason: %{reason}
 """
+ban_request = """An active user matching the ban expressions, do you want to ban them? (%{action}) ⛔
+• User ID: %{user_id}
+• Username: %{username}
+• Email: %{email}
+• Full name: %{full_name}
+• Bio: %{bio}
+• Website: %{website}
+• Profile: %{profile}
+• Reason: %{reason}
+"""
+
 ban_success = "User has been banned successfully ⛔"
-ban_failed = "Failed to ban the user! ⚠️"
-ban_denied = "User has been ignored ⚠️"
+ban_failed  = "Failed to ban the user! ⚠️"
+ban_denied  = "User has been ignored ⚠️"
 
 [words]
 not_found = "Not found"
-purge   = "purge"
-suspend = "suspend"
+purge     = "purge"
+suspend   = "suspend"
 
 [buttons]
 ban    = "Ban (%{action}) ⛔"

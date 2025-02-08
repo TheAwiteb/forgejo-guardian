@@ -209,18 +209,21 @@ pub struct Exprs {
     /// Send an alert when ban a user
     #[serde(default)]
     pub ban_alert:      bool,
+    /// Safe mode, if the user is active and the `ban_action` is `purge`, send a
+    /// ban request to the modiration team instead of `purge` the user
+    #[serde(default)]
+    pub safe_mode:      bool,
     /// Direct ban expressions.
     ///
     /// Users are directly banned if any of the expressions are true
     #[serde(default)]
     pub ban:            Expr,
-
     /// Alert expressions.
     ///
     /// Moderators will be notified via Telegram if one of the expressions are
     /// true
     #[serde(default)]
-    pub sus: Expr,
+    pub sus:            Expr,
 }
 
 /// forgejo-guard configuration
@@ -323,6 +326,7 @@ impl Default for Exprs {
         Self {
             only_new_users: false,
             ban_alert:      false,
+            safe_mode:      false,
             interval:       defaults::expressions::interval(),
             limit:          defaults::expressions::limit(),
             req_limit:      defaults::expressions::req_limit(),

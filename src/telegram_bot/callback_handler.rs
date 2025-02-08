@@ -57,7 +57,13 @@ pub async fn callback_handler(
                 .await
                 .is_ok()
             {
-                tracing::info!("Suspicious user @{data} has been banned");
+                let moderator = callback_query
+                    .from
+                    .username
+                    .map(|u| format!("@{u}"))
+                    .unwrap_or_else(|| format!("id={}", callback_query.from.id));
+
+                tracing::info!("Moderation team has banned @{data}, the moderator is {moderator}",);
                 t!("messages.ban_success")
             } else {
                 t!("messages.ban_failed")
