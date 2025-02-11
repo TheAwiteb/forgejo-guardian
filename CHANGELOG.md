@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 -  Add `safe_mode` to prevent banning active users and notify moderation team ([**#35**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/35)) ([`c5a75d1`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c5a75d16b5da579f7ac4a5e97cafd628f28cf4da))
 -  Add support for Matrix bot alongside Telegram bot ([**#36**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/36)) ([`2e1c1d5`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2e1c1d5fe43154b6b41d3c02b2c997b8d296b12b))
+### Changed
+-  New local `not_specified` used for the regex reason ([`2c76dce`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2c76dce21e613686702039c10645c4aefd1e5330))
 ### Fixed
 -  Fix safe mode condition ([`f741862`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f7418628a43772dad86340a40764f855ca473864))
 
