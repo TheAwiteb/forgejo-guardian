@@ -39,6 +39,7 @@ ban_denied  = "User has been ignored ⚠️"
 
 [words]
 not_found = "Not found"
+not_specified = "Not specified"
 purge     = "purge"
 suspend   = "suspend"
 

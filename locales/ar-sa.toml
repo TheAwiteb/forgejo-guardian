@@ -38,6 +38,7 @@ ban_denied = "تم تجاهل المستخدم ⚠️"
 
 [words]
 not_found = "غير موجود"
+not_specified = "غير محدد"
 purge     = "ازالة المستخدم"
 suspend   = "تعليق"
 

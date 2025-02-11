@@ -86,7 +86,7 @@ pub fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &st
         reason = re
             .reason
             .clone()
-            .unwrap_or_else(|| t!("words.not_found").into_owned()),
+            .unwrap_or_else(|| t!("words.not_specified").into_owned()),
     )
     .into_owned()
 }
