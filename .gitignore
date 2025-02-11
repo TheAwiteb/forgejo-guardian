@@ -1,2 +1,3 @@
 /target
 forgejo-guardian.toml
+db.redb

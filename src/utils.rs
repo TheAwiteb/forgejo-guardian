@@ -6,7 +6,7 @@ use std::{env, fs, path::PathBuf, str::FromStr};
 use tracing::level_filters::LevelFilter;
 
 use crate::{
-    config::{parse_invalid, Config, Telegram, CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH},
+    config::{parse_invalid, Config, Matrix, Telegram, CONFIG_PATH_ENV, DEFAULT_CONFIG_PATH},
     error::{GuardError, GuardResult},
 };
 
@@ -20,16 +20,32 @@ fn check_warnings(config: &Config) {
         );
     }
 
-    if config.expressions.sus.enabled && config.telegram.is_enabled().is_none() {
+    if config.expressions.sus.enabled
+        && !config.telegram.is_enabled()
+        && !config.matrix.is_enabled()
+    {
         tracing::warn!(
-            "The suspicious users expressions are enabled but the Telegram bot is disabled, the \
-             suspicious users will not be alerted"
+            "The suspicious users expressions are enabled but the Telegram and Matrix bot is \
+             disabled, the suspicious users will not be alerted"
         );
     }
 }
 
 /// Checks for errors in the config
 fn check_errors(config: &Config) -> GuardResult<()> {
+    if let Telegram::Invalid(toml_value) = &config.telegram {
+        return Err(GuardError::Other(format!(
+            "Configuration Error: {}",
+            parse_invalid::invalid_telegram(toml_value,)
+        )));
+    }
+    if let Matrix::Invalid(toml_value) = &config.matrix {
+        return Err(GuardError::Other(format!(
+            "Configuration Error: {}",
+            parse_invalid::invalid_matrix(toml_value,)
+        )));
+    }
+
     if config.expressions.safe_mode {
         if !config.expressions.ban_action.is_purge() {
             return Err(GuardError::Other(
@@ -45,13 +61,19 @@ fn check_errors(config: &Config) -> GuardResult<()> {
                     .to_owned(),
             ));
         }
-        if config.telegram.is_enabled().is_none() {
+        if !config.telegram.is_enabled() && !config.matrix.is_enabled() {
             return Err(GuardError::Other(
-                "Safe mode is enabled, but the Telegram bot is disabled, the safe mode need to \
-                 send a ban request to the modiration team"
+                "Safe mode is enabled, but Telegram and Matrix bot is disabled, the safe mode \
+                 need to send a ban request to the moderation team"
                     .to_owned(),
             ));
         }
+    }
+
+    if config.telegram.is_enabled() && config.matrix.is_enabled() {
+        return Err(GuardError::Other(
+            "Both Telegram and Matrix bot is enabled, only one can be enabled at a time".to_owned(),
+        ));
     }
 
     Ok(())
@@ -66,7 +88,7 @@ fn check_forgejo_token(config: &mut Config) -> GuardResult<()> {
     if config.forgejo.token.starts_with("env.") {
         let (_, env_var) = config.forgejo.token.split_once('.').expect("unreachable");
         let env_var = env::var(env_var).map_err(|_| {
-            GuardError::Other(format!("Environment variable `{}` not found", env_var))
+            GuardError::Other(format!("Environment variable `{env_var}` not found"))
         })?;
         config.forgejo.token = env_var;
     }
@@ -96,15 +118,9 @@ pub fn get_config() -> GuardResult<Config> {
     let mut config =
         toml::from_str(&fs::read_to_string(&config_path)?).map_err(GuardError::from)?;
 
-    check_warnings(&config);
     check_errors(&config)?;
+    check_warnings(&config);
     check_forgejo_token(&mut config)?;
-    if let Telegram::Invalid(toml_value) = &config.telegram {
-        return Err(GuardError::Other(format!(
-            "Configuration Error: {}",
-            parse_invalid::invalid_telegram(toml_value,)
-        )));
-    }
 
     Ok(config)
 }

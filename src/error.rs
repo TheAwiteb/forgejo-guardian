@@ -17,6 +17,10 @@ pub enum GuardError {
     /// reqwest error
     #[error("Sending request error: {0}")]
     RequestError(#[from] reqwest::Error),
+    #[error("Matrix Client: {0}")]
+    MatrixClient(#[from] matrix_sdk::Error),
+    #[error("Database error: {0}")]
+    RedbError(#[from] redb::Error),
     /// Invalid response from Forgejo
     #[error("Invalid response from Forgejo, the error `{0:?}` from `{1}`")]
     InvalidForgejoResponse(String, Url),
@@ -32,6 +36,8 @@ pub enum GuardError {
     /// Failed to ban the user
     #[error("Failed to ban the user, status code: {0}")]
     FailedToBan(StatusCode),
+    #[error("Matrix Error: {0}")]
+    Matrix(String),
     /// Other errors, for custom errors
     #[error("{0}")]
     Other(String),

@@ -9,11 +9,11 @@ use std::{process::ExitCode, sync::Arc, time::Duration};
 use tokio::{signal::ctrl_c, sync};
 use tokio_util::sync::CancellationToken;
 
+pub mod bots;
 pub mod config;
 pub mod error;
 pub mod forgejo_api;
 pub mod inactive_users;
-pub mod telegram_bot;
 pub mod traits;
 pub mod users_fetcher;
 pub mod utils;
@@ -25,10 +25,11 @@ async fn try_main() -> error::GuardResult<()> {
     let cancellation_token = CancellationToken::new();
     // Suspicious users are sent and received in this channel, users who meet the
     // `alert` expressions
-    let (sus_sender, sus_receiver) = sync::mpsc::channel::<telegram_bot::UserAlert>(100);
-    // Banned users (already banned) are sent and received in this channel, this
-    // to alert the admins on Telegram if `ban_alert` is set to true
-    let (ban_sender, ban_receiver) = sync::mpsc::channel::<telegram_bot::UserAlert>(100);
+    let (sus_sender, sus_receiver) = sync::mpsc::channel::<bots::UserAlert>(100);
+    // Banned users (already banned if `ban_alert`is set to true) and ban request
+    // are sent and received in this channel, this to alert the admins on
+    // Telegram and Matrix
+    let (ban_sender, ban_receiver) = sync::mpsc::channel::<bots::UserAlert>(100);
 
     tracing::info!("Forgejo instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
@@ -36,10 +37,8 @@ async fn try_main() -> error::GuardResult<()> {
         "Inactive users checker enabled: {}",
         config.inactive.enabled
     );
-    tracing::info!(
-        "Telegram enabled: {}",
-        config.telegram.is_enabled().is_some()
-    );
+    tracing::info!("Telegram enabled: {}", config.telegram.is_enabled());
+    tracing::info!("Matrix enabled: {}", config.matrix.is_enabled());
     tracing::info!(
         "Ban expressions enabled: {}",
         config.expressions.ban.enabled
@@ -133,20 +132,12 @@ async fn try_main() -> error::GuardResult<()> {
         }
     }
 
-    if let Some(telegram) = config.telegram.is_enabled() {
-        tracing::info!(config = "telegram", "Bot lang: {}", telegram.lang.as_str());
-        tracing::info!(config = "telegram", "Receiver chat ID: {}", telegram.chat);
-
-        rust_i18n::set_locale(telegram.lang.as_str());
-
-        tokio::spawn(telegram_bot::start_bot(
-            Arc::clone(&config),
-            telegram.clone(),
-            cancellation_token.clone(),
-            sus_receiver,
-            ban_receiver,
-        ));
-    }
+    bots::run_bots(
+        Arc::clone(&config),
+        cancellation_token.clone(),
+        sus_receiver,
+        ban_receiver,
+    );
 
     tokio::select! {
         _ = ctrl_c() => {

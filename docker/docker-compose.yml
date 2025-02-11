@@ -3,3 +3,4 @@ services:
     build: .
     volumes:
       - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
+      - ./db.redb:/app/db.redb

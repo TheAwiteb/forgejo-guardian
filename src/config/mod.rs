@@ -6,14 +6,15 @@ pub(crate) const CONFIG_PATH_ENV: &str = "FORGEJO_GUARDIAN_CONFIG";
 /// Defult config path location
 pub(crate) const DEFAULT_CONFIG_PATH: &str = "/app/forgejo-guardian.toml";
 
-use std::fmt::Display;
+use std::{fmt::Display, path::PathBuf};
 
+use matrix_sdk::ruma::OwnedRoomId;
 use regex::Regex;
 use serde::Deserialize;
 use teloxide::types::ChatId;
 use url::Url;
 
-use crate::telegram_bot::Lang;
+use crate::bots::Lang;
 
 mod boolean;
 mod defaults;
@@ -122,6 +123,41 @@ pub enum Telegram {
     Invalid(toml::Value),
 }
 
+/// The matrix bot data
+#[derive(Clone, Deserialize)]
+pub struct MatrixData {
+    /// Matrix bot homeserver
+    pub homeserver: url::Url,
+    /// Matrix bot username
+    pub username:   String,
+    /// Matrix bot password
+    pub password:   String,
+    /// The moderation room
+    pub room:       OwnedRoomId,
+    /// Events database path, must end with `.redb`
+    #[serde(deserialize_with = "deserializers::db_path")]
+    pub database:   PathBuf,
+    /// Bot language
+    pub lang:       Lang,
+}
+
+/// The matrix bot configuration
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Matrix {
+    Enabled {
+        /// Must be `true` to enable the Matrix bot
+        enabled: boolean::True,
+        #[serde(flatten)]
+        data:    MatrixData,
+    },
+    Disabled {
+        /// Must be `false` to disable the Matrix bot
+        enabled: boolean::False,
+    },
+    Invalid(toml::Value),
+}
+
 /// The regular expression with the reason
 #[derive(Debug, Clone)]
 pub struct RegexReason {
@@ -210,7 +246,7 @@ pub struct Exprs {
     #[serde(default)]
     pub ban_alert:      bool,
     /// Safe mode, if the user is active and the `ban_action` is `purge`, send a
-    /// ban request to the modiration team instead of `purge` the user
+    /// ban request to the moderation team instead of `purge` the user
     #[serde(default)]
     pub safe_mode:      bool,
     /// Direct ban expressions.
@@ -240,6 +276,9 @@ pub struct Config {
     /// Configuration of the telegram bot
     #[serde(default)]
     pub telegram:    Telegram,
+    /// Configuration of the matrix bot
+    #[serde(default)]
+    pub matrix:      Matrix,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
     pub expressions: Exprs,
@@ -271,11 +310,31 @@ impl RegexReason {
 
 impl Telegram {
     /// Returns the Telegram data if the Telegram bot is enabled
-    pub fn is_enabled(&self) -> Option<&TelegramData> {
+    pub fn data(&self) -> Option<&TelegramData> {
         match self {
             Telegram::Enabled { data, .. } => Some(data),
             _ => None,
         }
+    }
+
+    /// Returns the `true` if the Telegram bot is enabled
+    pub fn is_enabled(&self) -> bool {
+        matches!(self, Self::Enabled { .. })
+    }
+}
+
+impl Matrix {
+    /// Returns the Matrix data if the Matrix bot is enabled
+    pub fn data(&self) -> Option<&MatrixData> {
+        match self {
+            Matrix::Enabled { data, .. } => Some(data),
+            _ => None,
+        }
+    }
+
+    /// Returns the `true` if the Matrix bot is enabled
+    pub fn is_enabled(&self) -> bool {
+        matches!(self, Self::Enabled { .. })
     }
 }
 
@@ -339,6 +398,14 @@ impl Default for Exprs {
 }
 
 impl Default for Telegram {
+    fn default() -> Self {
+        Self::Disabled {
+            enabled: boolean::False,
+        }
+    }
+}
+
+impl Default for Matrix {
     fn default() -> Self {
         Self::Disabled {
             enabled: boolean::False,

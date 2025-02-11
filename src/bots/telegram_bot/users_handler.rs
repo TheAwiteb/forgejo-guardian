@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use std::{borrow::Cow, sync::Arc};
+use std::sync::Arc;
 
 use teloxide::{
     prelude::*,
@@ -12,7 +12,8 @@ use tokio_util::sync::CancellationToken;
 
 use super::UserAlert;
 use crate::{
-    config::{BanAction, Config, RegexReason, TelegramData},
+    bots::{action_word, user_details},
+    config::{Config, RegexReason, TelegramData},
     forgejo_api::ForgejoUser,
 };
 
@@ -29,43 +30,6 @@ fn make_ban_ignore_keyboard(user: &ForgejoUser, action: &str) -> InlineKeyboardM
         ),
         button(t!("buttons.ignore").as_ref(), "ignore -".to_owned()),
     ]])
-}
-
-fn not_found_if_empty(text: &str) -> Cow<'_, str> {
-    if text.is_empty() {
-        t!("words.not_found")
-    } else {
-        Cow::Borrowed(text)
-    }
-}
-
-/// Generate a user details message
-fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &str) -> String {
-    t!(
-        msg,
-        action = action,
-        user_id = user.id,
-        username = user.username,
-        email = user.email,
-        full_name = not_found_if_empty(&user.full_name),
-        bio = not_found_if_empty(&user.biography),
-        website = not_found_if_empty(&user.website),
-        profile = user.html_url,
-        reason = re
-            .reason
-            .clone()
-            .unwrap_or_else(|| t!("words.not_found").into_owned()),
-    )
-    .into_owned()
-}
-
-/// Get the action word from the ban action
-fn action_word(ban_action: &BanAction) -> String {
-    if ban_action.is_purge() {
-        t!("words.purge").into_owned()
-    } else {
-        t!("words.suspend").into_owned()
-    }
 }
 
 /// Send a suspicious user alert to the admins
@@ -153,7 +117,7 @@ pub async fn users_handler(
                 }
             }
             _ = cancellation_token.cancelled() => {
-                tracing::info!("sus users handler has been stopped successfully.");
+                tracing::info!("Telegram users handler has been stopped successfully.");
                 break;
             }
         }

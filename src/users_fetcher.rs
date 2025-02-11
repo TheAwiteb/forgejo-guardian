@@ -13,11 +13,11 @@ use tokio::sync::mpsc::Sender;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
+    bots::UserAlert,
     config::Config,
     error::GuardResult,
     forgejo_api::{self, get_users, ForgejoUser},
     inactive_users,
-    telegram_bot::UserAlert,
     traits::ExprChecker,
 };
 
@@ -172,15 +172,9 @@ async fn check_new_users(
                     &request_client,
                     &config,
                     false,
-                    config
-                        .telegram
-                        .is_enabled()
-                        .is_some()
+                    (config.telegram.is_enabled() || config.matrix.is_enabled())
                         .then_some(&sus_sender),
-                    config
-                        .telegram
-                        .is_enabled()
-                        .is_some()
+                    (config.telegram.is_enabled() || config.matrix.is_enabled())
                         .then_some(&ban_sender),
                 )
                 .await;

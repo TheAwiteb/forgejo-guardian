@@ -19,15 +19,49 @@ Simple Forgejo instance guardian, banning users and alerting admins based on cer
 
 `forgejo-guardian` is a simple guardian for your Forgejo instance, it will ban
 users based on certain regular expressions (regex) and alert the admins about
-them. The alert will send to the admin via a Telegram bot.
+them. The alert will send to the admin via a Telegram/Matrix bot.
 
 ### The expressions
 
 See the [Configuration](#configuration) section for more information about the
 expressions. The different between `ban` and `sus` is that the `ban` will ban
 the user, and the `sus` will only alert the admins about the user and the admin
-can decide to ban the user or not (via telegram inline keyboard). You can also
-set `telegram.ban_alert` to `true` to send a notification when a user is banned.
+can decide to ban the user or not. You can also
+set `expressions.ban_alert` to `true` to send a notification when a user is banned.
+
+### Bots
+
+The guardian can send suspicious users, banned users, and ban request to the
+moderation team via a Telegram/Matrix bot. The bot will send the messages in the
+language specified in the configuration file.
+
+#### Telegram
+
+The Telegram bot will send the messages to the chat ID specified in the
+configuration file. You can use a group, a channel, or a user chat ID. If the
+message is a suspicious user alert or ban request, the bot will attach two
+buttons to the message, one for banning the user and the other for ignoring
+the request.
+
+#### Matrix
+
+The Matrix bot will send the messages to the room ID specified in the
+configuration file. You can use a room ID. If the message is a suspicious user
+alert or ban request, the bot will add two reactions to the message, one for
+banning the user and the other for ignoring the request, and the bot will listen
+to the reactions and act accordingly.
+
+The matrix bot needs a database to store the event id of the alert (suspicous
+user or ban request) and the user username, so when the admin react to the
+message, the bot can get the event id and the username and act accordingly. If
+the reaction is ignore, the bot will remove the event id from the database.
+
+##### Commands
+
+- `!ping`: To check if the bot is alive, the bot will reply with `Pong!`
+
+> [!NOTE]
+> You have to invite the bot to the room before running the guardian
 
 ### Ban action
 
@@ -69,6 +103,7 @@ services:
         image: git.4rs.nl/awiteb/forgejo-guardian:0.5
         volumes:
             - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
+            #- ./db.redb:/app/db.redb # If you are using Matrix bot
 ```
 
 Make sure to have the `forgejo-guardian.toml` file in the same directory as the `docker-compose.yml` file, then you can run the following command:
@@ -227,8 +262,8 @@ Expressions configuration section, with the following fields:
     for review instead of purge the user directly
 -   `interval`: Interval to check for new users in seconds (default: `300s`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
--   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`) *
--   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`) *
+-   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`) \*
+-   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`) \*
 -   `ban_alert`: Send a notification when a user is banned (default: `false`)
 -   `ban_action`: The action to take when a user is banned, can be one of the following:
     -   `purge` (default): Forcibly delete user and any repositories, organizations, and
@@ -247,7 +282,7 @@ The `expressions.interval` and `expressions.req_interval` have the following suf
 -   `h`: Hours
 -   `d`: Days
 
-*: Only for checking old users, if `only_new_users` is set to `true`, the guardian will not use these values.
+\*: Only for checking old users, if `only_new_users` is set to `true`, the guardian will not use these values.
 
 `ban` and `sus` are tables, and each one have the following fields:
 
@@ -313,6 +348,35 @@ chat = 00000000000
 lang = "en-us"
 ```
 
+#### `matrix`
+
+Matrix bot configuration section, with the following fields:
+
+-   `enabled`: Enable the Matrix bot (default: If the section is present, it's
+    required, otherwise disabled)
+-   `homeserver`: Matrix homeserver URL **required, if the section is enabled**
+-   `username`: Bot username **required, if the section is enabled**
+-   `password`: Bot password **required, if the section is enabled**
+-   `room`: Room ID to send the alerts to **required, if the section is enabled**
+-   `database`: Database file to store the event id and the username, if you are
+    using docker, the path should be inside the container, for example
+    `/app/db.redb`, and you can mount it to the host machine, for example `-v
+    /path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
+    **required, if the section is enabled**
+-   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and
+    `ru-ru` are supported) **required, if the section is enabled**
+
+```toml
+[matrix]
+enabled    = true
+homeserver = "https://matrix.example.com"
+username   = "bot-username"
+password   = "bot-password"
+room       = "!egffmeGtArQzgmcuUb:example.com"
+database   = "./db.redb"
+lang       = "en-us"
+```
+
 ## Running the guardian
 
 After you have the configuration file ready, you can run the guardian with the following command:
@@ -325,11 +389,12 @@ You can remove the `FORGEJO_GUARDIAN_CONFIG` environment variable from the comma
 
 ### Adding a new language
 
-If you would like to contribute by adding a new language, you can do that by adding your language file in the `locales` directory, and then add it to `Lang` enum in `src/telegram_bot/mod.rs` file. Then you can use it in the configuration file.
+If you would like to contribute by adding a new language, you can do that by adding your language file in the `locales` directory, and then add it to `Lang` enum in `src/bots/mod.rs` file. Then you can use it in the configuration file.
 
 ## Mirrors
-- [Codeberg](https://codeberg.org/awiteb/forgejo-guardian)
-- [GitHub](https://github.com/theawiteb/forgejo-guardian)
+
+-   [Codeberg](https://codeberg.org/awiteb/forgejo-guardian)
+-   [GitHub](https://github.com/theawiteb/forgejo-guardian)
 
 ## License
 

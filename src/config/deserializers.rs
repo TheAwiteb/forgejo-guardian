@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
+use std::{fs::OpenOptions, path::PathBuf};
+
 use regex::Regex;
 use serde::{de, Deserialize};
 use toml::Value;
@@ -185,4 +187,42 @@ where
         )));
     }
     Ok(value)
+}
+
+/// Check the database path and return the path if it is valid
+pub fn db_path<'de, D>(des: D) -> Result<PathBuf, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    let path = PathBuf::deserialize(des)?;
+    if path
+        .extension()
+        .is_none_or(|e| e.to_str().is_none_or(|e| e != "redb"))
+    {
+        let mut correct_path = path.clone();
+        correct_path.set_extension("redb");
+        return Err(de::Error::custom(format!(
+            "The file extension must be `redb`, try{context} `{p}`",
+            p = correct_path.display(),
+            context = if path.exists() {
+                " to renaming it to"
+            } else {
+                " to use"
+            }
+        )));
+    }
+    if let Err(err) = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(&path)
+    {
+        return Err(de::Error::custom(format!(
+            "Failed to open the file: {}",
+            err
+        )));
+    }
+
+    Ok(path)
 }

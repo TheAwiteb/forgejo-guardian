@@ -25,6 +25,51 @@ fn check_key(
     }
     Ok(())
 }
+/// Macro to use `check_key` function to check multiple keys in a table
+///
+/// ## Example
+/// ```rust,no_run
+/// checks! {
+///     (table, "telegram")
+///     ty="string"=>is_str; "token", "lang";
+///     ty="number"=>is_integer; "chat";
+/// };
+/// ```
+macro_rules! checks {
+    (
+        ($table:ident, $table_name:tt)
+        $(ty=$keys_type:tt => $check_fn:ident, keys=[$($keys:tt),+]$(;)?);+
+    ) => {
+        let is_enabled = $table
+            .get("enabled")
+            .map_or_else(|| false, |v| v.as_bool().unwrap_or_default());
+
+        if let Err(err) = check_key(
+            $table_name,
+            $table,
+            "enabled",
+            "boolean",
+            Value::is_bool,
+            true,
+        ) {
+            return err;
+        }
+        $(
+            $(
+                if let Err(err) = check_key(
+                    $table_name,
+                    $table,
+                    $keys,
+                    $keys_type,
+                    Value::$check_fn,
+                    is_enabled,
+                ) {
+                    return err;
+                }
+            )+
+        )+
+    };
+}
 
 /// Returns readable error messages for invalid telegram configuration.
 ///
@@ -34,56 +79,32 @@ pub fn invalid_telegram(value: &Value) -> String {
     let Some(table) = value.as_table() else {
         return format!("`telegram` must be a table, found `{}`", value);
     };
-    let is_enabled = table
-        .get("enabled")
-        .map_or_else(|| false, |v| v.as_bool().unwrap_or_default());
-    // check enabled field
-    if let Err(err) = check_key(
-        "telegram",
-        table,
-        "enabled",
-        "boolean",
-        Value::is_bool,
-        true,
-    ) {
-        return err;
-    }
-    // check token
-    if let Err(err) = check_key(
-        "telegram",
-        table,
-        "token",
-        "string",
-        Value::is_str,
-        is_enabled,
-    ) {
-        return err;
-    }
-    // check chat
-    if let Err(err) = check_key(
-        "telegram",
-        table,
-        "chat",
-        "number",
-        Value::is_integer,
-        is_enabled,
-    ) {
-        return err;
-    }
-    // check lang
-    if let Err(err) = check_key(
-        "telegram",
-        table,
-        "lang",
-        "string",
-        Value::is_str,
-        is_enabled,
-    ) {
-        return err;
+
+    checks! {
+        (table, "telegram")
+        ty="string"=>is_str, keys=["token", "lang"];
+        ty="number"=>is_integer, keys=["chat"];
     }
 
     unreachable!(
         "The telegram configuration is invalid, all keys are checked and one of them should \
          returns the error message"
+    );
+}
+
+pub fn invalid_matrix(value: &Value) -> String {
+    // check if it's a table
+    let Some(table) = value.as_table() else {
+        return format!("`matrix` must be a table, found `{}`", value);
+    };
+
+    checks! {
+        (table, "matrix")
+        ty="string"=>is_str, keys=["host","username","password","room","lang"];
+    }
+
+    unreachable!(
+        "The matrix configuration is invalid, all keys are checked and one of them should returns \
+         the error message"
     );
 }

@@ -10,62 +10,12 @@ mod users_handler;
 use std::sync::Arc;
 
 use callback_handler::callback_handler;
-use serde::Deserialize;
 use teloxide::{dispatching::UpdateFilterExt, prelude::*};
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
-use crate::{
-    config::{Config, RegexReason, TelegramData},
-    forgejo_api::ForgejoUser,
-};
-
-/// Type to represent a user alert
-pub struct UserAlert {
-    /// The user that has been alerted, suspect or banned
-    user:      ForgejoUser,
-    /// The reason why the user has been alerted
-    reason:    RegexReason,
-    /// Safe mode is enabled
-    safe_mode: bool,
-}
-
-impl UserAlert {
-    /// Create a new user alert
-    pub fn new(user: ForgejoUser, reason: RegexReason) -> Self {
-        Self {
-            user,
-            reason,
-            safe_mode: false,
-        }
-    }
-
-    /// Set a value to the safe mode
-    pub fn safe_mode(mut self) -> Self {
-        self.safe_mode = true;
-        self
-    }
-}
-
-/// Language of the telegram bot
-#[derive(Clone, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum Lang {
-    EnUs,
-    ArSa,
-    RuRu,
-}
-
-impl Lang {
-    /// Get the language as a string
-    pub fn as_str(&self) -> &str {
-        match self {
-            Lang::EnUs => "en-us",
-            Lang::ArSa => "ar-sa",
-            Lang::RuRu => "ru-ru",
-        }
-    }
-}
+use super::UserAlert;
+use crate::config::{Config, TelegramData};
 
 /// Start the telegram bot
 pub async fn start_bot(
