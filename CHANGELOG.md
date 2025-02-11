@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## unreleased
 ### Added
 -  Add `safe_mode` to prevent banning active users and notify moderation team ([**#35**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/35)) ([`c5a75d1`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/c5a75d16b5da579f7ac4a5e97cafd628f28cf4da))
+### Fixed
+-  Fix safe mode condition ([`f741862`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f7418628a43772dad86340a40764f855ca473864))
 
 ## [0.5.1](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.5.0..v0.5.1) - 2025-01-29
 ### Added
