@@ -110,7 +110,7 @@ async fn try_main() -> error::GuardResult<()> {
             Arc::clone(&config),
             cancellation_token.clone(),
             sus_sender,
-            ban_sender,
+            ban_sender.clone(),
         ));
 
         if !config.expressions.only_new_users {
@@ -127,6 +127,7 @@ async fn try_main() -> error::GuardResult<()> {
 
             tokio::spawn(users_fetcher::old_users(
                 Arc::clone(&config),
+                ban_sender,
                 cancellation_token.clone(),
             ));
         }

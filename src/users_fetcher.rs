@@ -70,6 +70,7 @@ async fn check_new_user(
     user: ForgejoUser,
     request_client: &reqwest::Client,
     config: &Config,
+    overwrite_ban_alert: bool,
     sus_sender: Option<&Sender<UserAlert>>,
     ban_sender: Option<&Sender<UserAlert>>,
 ) -> u32 {
@@ -111,7 +112,7 @@ async fn check_new_user(
         .await
         {
             tracing::error!("Error while banning a user: {err}");
-        } else if config.expressions.ban_alert && ban_sender.is_some() {
+        } else if config.expressions.ban_alert && ban_sender.is_some() && !overwrite_ban_alert {
             ban_sender
                 .unwrap()
                 .send(UserAlert::new(user, re))
@@ -170,6 +171,7 @@ async fn check_new_users(
                     user,
                     &request_client,
                     &config,
+                    false,
                     config
                         .telegram
                         .is_enabled()
@@ -223,7 +225,11 @@ pub async fn users_fetcher(
 
 /// Check for old users and ban them if they match the ban expressions. This
 /// will not sned any alerts
-pub async fn old_users(config: Arc<Config>, cancellation_token: CancellationToken) {
+pub async fn old_users(
+    config: Arc<Config>,
+    ban_sender: Sender<UserAlert>,
+    cancellation_token: CancellationToken,
+) {
     tracing::info!("Starting old users fetcher");
 
     let wait_interval = || {
@@ -280,7 +286,7 @@ pub async fn old_users(config: Arc<Config>, cancellation_token: CancellationToke
                 reqs = 0;
             }
 
-            reqs += check_new_user(user, &client, &config, None, None).await;
+            reqs += check_new_user(user, &client, &config, true, None, Some(&ban_sender)).await;
         }
 
         page += 1;
