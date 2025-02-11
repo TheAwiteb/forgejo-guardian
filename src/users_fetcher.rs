@@ -76,7 +76,7 @@ async fn check_new_user(
     if let Some(re) = config.expressions.ban.is_match(&user) {
         if is_user_protected(request_client, config, &user, &ban_sender)
             .await
-            .unwrap_or(true)
+            .unwrap_or_default()
         //  | ^^^^^
         //  | If there is an error don't send ban request
         {
