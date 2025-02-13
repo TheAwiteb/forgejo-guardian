@@ -3,6 +3,7 @@
 
 use std::{borrow::Cow, sync::Arc};
 
+use redb::Database;
 use serde::Deserialize;
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
@@ -102,6 +103,7 @@ pub fn action_word(ban_action: &BanAction) -> String {
 
 /// Run the telegram bot in a separate task
 pub fn run_telegram_bot(
+    database: Arc<Database>,
     config: Arc<Config>,
     telegram: TelegramData,
     cancellation_token: CancellationToken,
@@ -114,6 +116,7 @@ pub fn run_telegram_bot(
     rust_i18n::set_locale(telegram.lang.as_str());
 
     tokio::spawn(telegram_bot::start_bot(
+        database,
         config,
         telegram,
         cancellation_token.clone(),
@@ -124,6 +127,7 @@ pub fn run_telegram_bot(
 
 /// Run the matrix bot in a separate task
 pub fn run_matrix_bot(
+    database: Arc<Database>,
     config: Arc<Config>,
     matrix: MatrixData,
     cancellation_token: CancellationToken,
@@ -138,6 +142,7 @@ pub fn run_matrix_bot(
     rust_i18n::set_locale(matrix.lang.as_str());
 
     tokio::spawn(matrix_bot::start_bot(
+        database,
         config,
         matrix,
         cancellation_token.clone(),
@@ -148,6 +153,7 @@ pub fn run_matrix_bot(
 
 /// Run the enabled bot, if any
 pub fn run_bots(
+    database: Arc<Database>,
     config: Arc<Config>,
     cancellation_token: CancellationToken,
     sus_receiver: Receiver<UserAlert>,
@@ -155,6 +161,7 @@ pub fn run_bots(
 ) {
     if let Some(telegram) = config.telegram.data().cloned() {
         run_telegram_bot(
+            database,
             config,
             telegram,
             cancellation_token,
@@ -163,6 +170,7 @@ pub fn run_bots(
         )
     } else if let Some(matrix) = config.matrix.data().cloned() {
         run_matrix_bot(
+            database,
             config,
             matrix,
             cancellation_token,

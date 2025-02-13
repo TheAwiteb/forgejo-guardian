@@ -11,6 +11,7 @@ use tokio_util::sync::CancellationToken;
 
 pub mod bots;
 pub mod config;
+pub mod db;
 pub mod error;
 pub mod forgejo_api;
 pub mod inactive_users;
@@ -30,6 +31,7 @@ async fn try_main() -> error::GuardResult<()> {
     // are sent and received in this channel, this to alert the admins on
     // Telegram and Matrix
     let (ban_sender, ban_receiver) = sync::mpsc::channel::<bots::UserAlert>(100);
+    let database = Arc::new(db::init_db(&config.database)?);
 
     tracing::info!("Forgejo instance: {}", config.forgejo.instance);
     tracing::info!("Dry run: {}", config.dry_run);
@@ -107,6 +109,7 @@ async fn try_main() -> error::GuardResult<()> {
 
         tokio::spawn(users_fetcher::users_fetcher(
             Arc::clone(&config),
+            Arc::clone(&database),
             cancellation_token.clone(),
             sus_sender,
             ban_sender.clone(),
@@ -126,6 +129,7 @@ async fn try_main() -> error::GuardResult<()> {
 
             tokio::spawn(users_fetcher::old_users(
                 Arc::clone(&config),
+                Arc::clone(&database),
                 ban_sender,
                 cancellation_token.clone(),
             ));
@@ -133,6 +137,7 @@ async fn try_main() -> error::GuardResult<()> {
     }
 
     bots::run_bots(
+        Arc::clone(&database),
         Arc::clone(&config),
         cancellation_token.clone(),
         sus_receiver,

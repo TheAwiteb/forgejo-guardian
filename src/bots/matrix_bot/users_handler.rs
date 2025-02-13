@@ -7,10 +7,11 @@ use matrix_sdk::ruma::OwnedEventId;
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
-use super::{database::EventsTableTrait, MatrixBot};
+use super::MatrixBot;
 use crate::{
     bots::{action_word, user_details, UserAlert},
     config::{BanAction, Config},
+    db::EventsTableTrait,
 };
 
 /// Send an alert to the moderation room

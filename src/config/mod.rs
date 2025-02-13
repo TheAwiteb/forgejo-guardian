@@ -134,9 +134,6 @@ pub struct MatrixData {
     pub password:   String,
     /// The moderation room
     pub room:       OwnedRoomId,
-    /// Events database path, must end with `.redb`
-    #[serde(deserialize_with = "deserializers::db_path")]
-    pub database:   PathBuf,
     /// Bot language
     pub lang:       Lang,
 }
@@ -268,6 +265,12 @@ pub struct Config {
     /// Dry run, without banning the users
     #[serde(default)]
     pub dry_run:     bool,
+    /// Events database path, must end with `.redb`
+    #[serde(
+        default = "defaults::database",
+        deserialize_with = "deserializers::db_path"
+    )]
+    pub database:    PathBuf,
     /// Inactive users configuration
     #[serde(default)]
     pub inactive:    Inactive,

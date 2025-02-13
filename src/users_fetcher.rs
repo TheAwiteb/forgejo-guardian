@@ -9,12 +9,14 @@ use std::{
     time::Duration,
 };
 
+use redb::Database;
 use tokio::sync::mpsc::Sender;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
     bots::UserAlert,
     config::Config,
+    db::IgnoredUsersTableTrait,
     error::GuardResult,
     forgejo_api::{self, get_users, ForgejoUser},
     inactive_users,
@@ -68,12 +70,18 @@ async fn is_user_protected(
 /// Check if ban or suspect a new user, returns the number of sended requests
 async fn check_new_user(
     user: ForgejoUser,
+    database: &Database,
     request_client: &reqwest::Client,
     config: &Config,
     overwrite_ban_alert: bool,
     sus_sender: Option<&Sender<UserAlert>>,
     ban_sender: Option<&Sender<UserAlert>>,
 ) -> u32 {
+    if let Ok(true) = database.is_ignored(&user.username) {
+        tracing::info!("Ignore an ignored user `@{}`", user.username);
+        return 0;
+    }
+
     if let Some(re) = config.expressions.ban.is_match(&user) {
         if is_user_protected(request_client, config, &user, &ban_sender)
             .await
@@ -140,6 +148,7 @@ async fn check_new_user(
 async fn check_new_users(
     last_user_id: Arc<AtomicUsize>,
     request_client: Arc<reqwest::Client>,
+    database: Arc<Database>,
     config: Arc<Config>,
     sus_sender: Sender<UserAlert>,
     ban_sender: Sender<UserAlert>,
@@ -169,6 +178,7 @@ async fn check_new_users(
             for user in new_users {
                 check_new_user(
                     user,
+                    &database,
                     &request_client,
                     &config,
                     false,
@@ -190,6 +200,7 @@ async fn check_new_users(
 /// suspected users to the channel
 pub async fn users_fetcher(
     config: Arc<Config>,
+    database: Arc<Database>,
     cancellation_token: CancellationToken,
     sus_sender: Sender<UserAlert>,
     ban_sender: Sender<UserAlert>,
@@ -204,6 +215,7 @@ pub async fn users_fetcher(
                 tokio::spawn(check_new_users(
                     Arc::clone(&last_user_id),
                     Arc::clone(&request_client),
+                    Arc::clone(&database),
                     Arc::clone(&config),
                     sus_sender.clone(),
                     ban_sender.clone(),
@@ -221,6 +233,7 @@ pub async fn users_fetcher(
 /// will not sned any alerts
 pub async fn old_users(
     config: Arc<Config>,
+    database: Arc<Database>,
     ban_sender: Sender<UserAlert>,
     cancellation_token: CancellationToken,
 ) {
@@ -280,7 +293,16 @@ pub async fn old_users(
                 reqs = 0;
             }
 
-            reqs += check_new_user(user, &client, &config, true, None, Some(&ban_sender)).await;
+            reqs += check_new_user(
+                user,
+                &database,
+                &client,
+                &config,
+                true,
+                None,
+                Some(&ban_sender),
+            )
+            .await;
         }
 
         page += 1;

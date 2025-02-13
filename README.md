@@ -51,17 +51,18 @@ alert or ban request, the bot will add two reactions to the message, one for
 banning the user and the other for ignoring the request, and the bot will listen
 to the reactions and act accordingly.
 
-The matrix bot needs a database to store the event id of the alert (suspicous
-user or ban request) and the user username, so when the admin react to the
-message, the bot can get the event id and the username and act accordingly. If
-the reaction is ignore, the bot will remove the event id from the database.
-
 ##### Commands
 
 - `!ping`: To check if the bot is alive, the bot will reply with `Pong!`
 
 > [!NOTE]
 > You have to invite the bot to the room before running the guardian
+
+### Database
+
+The guardian uses a database to store the ignored users and Matrix events, the
+default path is `/app/db.redb`, but you can specify a different one in the
+configuration file. The database file extension should be `.redb`.
 
 ### Ban action
 
@@ -183,9 +184,15 @@ In our configuration file you can have the following sections and the global sec
 The global section is the one that doesn't have a name, and it's in the top of the configuration file, with the following fields:
 
 -   `dry_run`: If set to `true`, the guardian will not ban the users, but will only alert the admins (default: `false`)
+-   `database`: Database path to store ignored users and Matrix events, if you
+    are using docker, the path should be inside the container, for example
+    `/app/db.redb`, and you can mount it to the host machine, for example `-v
+    /path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
+    (default: `/app/db.redb`)
 
 ```toml
-dry_run = true
+dry_run  = true
+database = "./db.redb"
 ```
 
 #### `forgejo`
@@ -358,11 +365,6 @@ Matrix bot configuration section, with the following fields:
 -   `username`: Bot username **required, if the section is enabled**
 -   `password`: Bot password **required, if the section is enabled**
 -   `room`: Room ID to send the alerts to **required, if the section is enabled**
--   `database`: Database file to store the event id and the username, if you are
-    using docker, the path should be inside the container, for example
-    `/app/db.redb`, and you can mount it to the host machine, for example `-v
-    /path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
-    **required, if the section is enabled**
 -   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and
     `ru-ru` are supported) **required, if the section is enabled**
 
@@ -373,7 +375,6 @@ homeserver = "https://matrix.example.com"
 username   = "bot-username"
 password   = "bot-password"
 room       = "!egffmeGtArQzgmcuUb:example.com"
-database   = "./db.redb"
 lang       = "en-us"
 ```
 

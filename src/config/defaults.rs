@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
+use std::path::PathBuf;
+
 /// A constant function that returns `true`.
 pub const fn bool_true() -> bool {
     true
 }
 
-/// Defult configuration for expressions section
+/// The default database path. `/app/db.redb`
+pub fn database() -> PathBuf {
+    PathBuf::from("/app/db.redb")
+}
+
+/// Default configuration for expressions section
 pub mod expressions {
     use crate::config::BanAction;
 

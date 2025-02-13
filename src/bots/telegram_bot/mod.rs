@@ -10,6 +10,7 @@ mod users_handler;
 use std::sync::Arc;
 
 use callback_handler::callback_handler;
+use redb::Database;
 use teloxide::{dispatching::UpdateFilterExt, prelude::*};
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
@@ -19,6 +20,7 @@ use crate::config::{Config, TelegramData};
 
 /// Start the telegram bot
 pub async fn start_bot(
+    database: Arc<Database>,
     config: Arc<Config>,
     telegram: TelegramData,
     cancellation_token: CancellationToken,
@@ -46,7 +48,7 @@ pub async fn start_bot(
     ));
 
     Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![config])
+        .dependencies(dptree::deps![config, database])
         .enable_ctrlc_handler()
         .build()
         .dispatch()

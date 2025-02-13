@@ -42,3 +42,27 @@ pub enum GuardError {
     #[error("{0}")]
     Other(String),
 }
+
+impl From<redb::TransactionError> for GuardError {
+    fn from(err: redb::TransactionError) -> Self {
+        Self::RedbError(err.into())
+    }
+}
+
+impl From<redb::StorageError> for GuardError {
+    fn from(err: redb::StorageError) -> Self {
+        Self::RedbError(err.into())
+    }
+}
+
+impl From<redb::TableError> for GuardError {
+    fn from(err: redb::TableError) -> Self {
+        Self::RedbError(err.into())
+    }
+}
+
+impl From<redb::CommitError> for GuardError {
+    fn from(err: redb::CommitError) -> Self {
+        Self::RedbError(err.into())
+    }
+}

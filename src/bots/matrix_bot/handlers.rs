@@ -12,8 +12,11 @@ use matrix_sdk::{
 };
 use reqwest::Client;
 
-use super::{database::EventsTableTrait, utils, MatrixBot};
-use crate::forgejo_api;
+use super::{utils, MatrixBot};
+use crate::{
+    db::{EventsTableTrait, IgnoredUsersTableTrait},
+    forgejo_api,
+};
 
 impl MatrixBot {
     pub async fn on_room_reaction(
@@ -89,6 +92,7 @@ impl MatrixBot {
                 Some([event.sender.clone()]),
             )
             .await;
+            bot.db.add_ignored_user(&username).ok();
         }
 
         bot.db.remove_event(&reply_to_event_id).ok();

@@ -28,7 +28,10 @@ fn make_ban_ignore_keyboard(user: &ForgejoUser, action: &str) -> InlineKeyboardM
             t!("buttons.ban", action = action).as_ref(),
             format!("b {}", user.username),
         ),
-        button(t!("buttons.ignore").as_ref(), "ignore -".to_owned()),
+        button(
+            t!("buttons.ignore").as_ref(),
+            format!("i {}", user.username),
+        ),
     ]])
 }
 

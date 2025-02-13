@@ -8,7 +8,6 @@ use redb::Database;
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
-mod database;
 mod handlers;
 mod matrix_api;
 mod users_handler;
@@ -30,8 +29,11 @@ pub struct MatrixBot {
 
 impl MatrixBot {
     /// Create a new matrix bot
-    pub async fn new(config: Arc<Config>, matrix: &MatrixData) -> GuardResult<Self> {
-        let db = Arc::new(database::init_db(&matrix.database)?);
+    pub async fn new(
+        config: Arc<Config>,
+        matrix: &MatrixData,
+        database: Arc<Database>,
+    ) -> GuardResult<Self> {
         let client = MatrixClient::builder()
             .homeserver_url(&matrix.homeserver)
             .build()
@@ -53,7 +55,7 @@ impl MatrixBot {
         Ok(Self {
             config,
             client,
-            db,
+            db: database,
             moderation_room,
         })
     }
@@ -92,6 +94,7 @@ impl MatrixBot {
 
 /// Start the matrix bot
 pub async fn start_bot(
+    database: Arc<Database>,
     config: Arc<Config>,
     matrix: MatrixData,
     cancellation_token: CancellationToken,
@@ -100,7 +103,7 @@ pub async fn start_bot(
 ) {
     tracing::info!("Starting the matrix bot");
 
-    let bot = match MatrixBot::new(Arc::clone(&config), &matrix).await {
+    let bot = match MatrixBot::new(Arc::clone(&config), &matrix, database).await {
         Ok(bot) => bot,
         Err(err) => {
             tracing::error!("Falied to run the matrix bot: {err}");

@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use redb::Database;
 use reqwest::Client;
 use teloxide::{
     prelude::*,
@@ -15,7 +16,7 @@ use teloxide::{
     },
 };
 
-use crate::{config::Config, forgejo_api};
+use crate::{config::Config, db::IgnoredUsersTableTrait, forgejo_api};
 
 /// Inline keyboard with a single button that links to the Forgejo Guardian
 /// repository.
@@ -31,6 +32,7 @@ fn source_inline_keyboard(text: &str) -> InlineKeyboardMarkup {
 /// Handle callback queries from the inline keyboard.
 pub async fn callback_handler(
     bot: Bot,
+    database: Arc<Database>,
     callback_query: CallbackQuery,
     config: Arc<Config>,
 ) -> ResponseResult<()> {
@@ -44,6 +46,7 @@ pub async fn callback_handler(
     };
 
     match command {
+        // Ban
         "b" => {
             // ban the user
             let button_text = if config.dry_run
@@ -75,12 +78,14 @@ pub async fn callback_handler(
                     .await?;
             }
         }
-        "ignore" => {
+        // Ignore
+        "i" => {
             if let Some(MaybeInaccessibleMessage::Regular(msg)) = callback_query.message {
                 bot.edit_message_reply_markup(msg.chat.id, msg.id)
                     .reply_markup(source_inline_keyboard(&t!("messages.ban_denied")))
                     .await?;
             }
+            database.add_ignored_user(data).ok();
         }
         _ => {}
     };
