@@ -53,7 +53,7 @@ impl MatrixBot {
                 return;
             }
             Err(err) => {
-                tracing::error!("Falid to get username from db: {err}");
+                tracing::error!("Failed to get username from db: {err}");
                 return;
             }
         };

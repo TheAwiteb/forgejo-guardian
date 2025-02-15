@@ -11,6 +11,7 @@ use std::{
 
 use redb::Database;
 use tokio::sync::mpsc::Sender;
+use tokio::time::sleep as tokio_sleep;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
@@ -23,6 +24,23 @@ use crate::{
     traits::ExprChecker,
 };
 
+/// Maximum retries for fetching the users
+const MAX_RETRIES: u8 = 10;
+/// Base seconds for the retry interval
+const RETRY_INTERVAL: u8 = 30;
+
+/// Wait for the interval to pass, if the cancellation token is cancelled,
+/// return true, after the interval has passed return false
+async fn wait_interval(req_interval: u32, cancellation_token: &CancellationToken) -> bool {
+    tracing::debug!(
+        "Reached the request limit for old users checker. Waiting for {req_interval} seconds.",
+    );
+    tokio::select! {
+        _ = tokio_sleep(Duration::from_secs(req_interval.into())) => false,
+        _ = cancellation_token.cancelled() => true,
+    }
+}
+
 /// Get the new instance users, the vector may be empty if there are no new
 /// users
 ///
@@ -32,19 +50,77 @@ async fn get_new_users(
     request_client: &reqwest::Client,
     last_user_id: usize,
     config: &Config,
-) -> GuardResult<Vec<ForgejoUser>> {
+    cancellation_token: CancellationToken,
+) -> Vec<ForgejoUser> {
+    let mut page = 1;
+    let mut reqs = 0;
+    let mut retries = 0;
+    let mut users = Vec::new();
+
+    loop {
+        if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
+            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+                break;
+            }
+            reqs = 0;
+        }
+        reqs += 1;
+        let page_users = match forgejo_api::get_users(
+            request_client,
+            &config.forgejo.instance,
+            &config.forgejo.token,
+            config.expressions.limit,
+            page,
+            "newest",
+        )
+        .await
+        {
+            Ok(mut page_users) => {
+                retries = 0;
+                page_users.retain(|u| u.id > last_user_id);
+                page_users
+            }
+            Err(err) => {
+                retries += 1;
+                tracing::error!("Failed to fetch new users page {page}: {err}");
+                if retries >= MAX_RETRIES {
+                    tracing::error!(
+                        "Failed to fetch new users page {page} after {MAX_RETRIES} retries."
+                    );
+                    return users;
+                }
+                tracing::info!("Retrying in {} seconds.", RETRY_INTERVAL * retries);
+                tokio_sleep(Duration::from_secs((RETRY_INTERVAL * retries).into())).await;
+                continue;
+            }
+        };
+        if page_users.is_empty() {
+            tracing::info!("Done fetching all new users, the total is {}", users.len());
+            break;
+        }
+        users.extend(page_users);
+        page += 1;
+    }
+    users
+}
+
+/// Get the newest user id from the instance
+async fn get_newest_user_id(
+    request_client: &reqwest::Client,
+    config: &Config,
+) -> GuardResult<usize> {
     Ok(get_users(
         request_client,
         &config.forgejo.instance,
         &config.forgejo.token,
-        config.expressions.limit,
+        1,
         1,
         "newest",
     )
     .await?
-    .into_iter()
-    .filter(|u| u.id > last_user_id)
-    .collect())
+    .first()
+    .map(|u| u.id)
+    .unwrap_or(1))
 }
 
 /// Check if the user is protected from being banned
@@ -150,49 +226,45 @@ async fn check_new_users(
     request_client: Arc<reqwest::Client>,
     database: Arc<Database>,
     config: Arc<Config>,
+    cancellation_token: CancellationToken,
     sus_sender: Sender<UserAlert>,
     ban_sender: Sender<UserAlert>,
 ) {
-    let is_first_fetch = last_user_id.load(Ordering::Relaxed) == 0;
-    match get_new_users(
+    let mut reqs = 0;
+    let new_users = get_new_users(
         &request_client,
         last_user_id.load(Ordering::Relaxed),
         &config,
+        cancellation_token.clone(),
     )
-    .await
-    {
-        Ok(new_users) => {
-            if !new_users.is_empty() {
-                tracing::debug!("Found {} new user(s)", new_users.len());
-            }
+    .await;
 
-            if let Some(uid) = new_users.iter().max_by_key(|u| u.id).map(|u| u.id) {
-                tracing::debug!("New last user id: {uid}");
-                last_user_id.store(uid, Ordering::Relaxed);
-            }
+    if new_users.is_empty() {
+        return;
+    }
 
-            if is_first_fetch {
-                return;
-            }
+    if let Some(uid) = new_users.iter().max_by_key(|u| u.id).map(|u| u.id) {
+        tracing::debug!("New last user id: {uid}");
+        last_user_id.store(uid, Ordering::Relaxed);
+    }
 
-            for user in new_users {
-                check_new_user(
-                    user,
-                    &database,
-                    &request_client,
-                    &config,
-                    false,
-                    (config.telegram.is_enabled() || config.matrix.is_enabled())
-                        .then_some(&sus_sender),
-                    (config.telegram.is_enabled() || config.matrix.is_enabled())
-                        .then_some(&ban_sender),
-                )
-                .await;
+    for user in new_users {
+        if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
+            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+                break;
             }
+            reqs = 0;
         }
-        Err(err) => {
-            tracing::error!("Error while fetching new users: {err}");
-        }
+        reqs += check_new_user(
+            user,
+            &database,
+            &request_client,
+            &config,
+            false,
+            (config.telegram.is_enabled() || config.matrix.is_enabled()).then_some(&sus_sender),
+            (config.telegram.is_enabled() || config.matrix.is_enabled()).then_some(&ban_sender),
+        )
+        .await;
     }
 }
 
@@ -205,8 +277,13 @@ pub async fn users_fetcher(
     sus_sender: Sender<UserAlert>,
     ban_sender: Sender<UserAlert>,
 ) {
-    let last_user_id = Arc::new(AtomicUsize::new(0));
     let request_client = Arc::new(reqwest::Client::new());
+    let last_user_id = if let Ok(last_id) = get_newest_user_id(&request_client, &config).await {
+        Arc::new(AtomicUsize::new(last_id))
+    } else {
+        tracing::error!("Failed to get newest user id");
+        return;
+    };
 
     tracing::info!("Starting users fetcher");
     loop {
@@ -217,6 +294,7 @@ pub async fn users_fetcher(
                     Arc::clone(&request_client),
                     Arc::clone(&database),
                     Arc::clone(&config),
+                    cancellation_token.clone(),
                     sus_sender.clone(),
                     ban_sender.clone(),
                 ));
@@ -239,27 +317,15 @@ pub async fn old_users(
 ) {
     tracing::info!("Starting old users fetcher");
 
-    let wait_interval = || {
-        async {
-            tracing::debug!(
-                "Reached the request limit for old users checker. Waiting for {} seconds.",
-                config.expressions.req_interval
-            );
-            tokio::select! {
-                _ = tokio::time::sleep(Duration::from_secs(config.expressions.req_interval.into())) => false,
-                _ = cancellation_token.cancelled() => true,
-            }
-        }
-    };
-
     let client = reqwest::Client::new();
+    let mut retries = 0;
     let mut reqs = 0;
     let mut page = 1;
 
     'main_loop: loop {
         // Enter the block if we cancelled, so will break
         if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
-            if wait_interval().await {
+            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
                 break;
             }
             reqs = 0
@@ -276,10 +342,17 @@ pub async fn old_users(
         )
         .await
         else {
-            tracing::error!("Falid to fetch old users");
+            tracing::error!("Failed to fetch old users");
+            retries += 1;
+            if retries >= MAX_RETRIES {
+                tracing::error!("Failed to fetch old users after {MAX_RETRIES} retries.");
+                return;
+            }
+            tracing::info!("Retrying in {} seconds.", RETRY_INTERVAL * retries);
+            tokio_sleep(Duration::from_secs((RETRY_INTERVAL * retries).into())).await;
             continue;
         };
-
+        retries = 0;
         if users.is_empty() {
             tracing::info!("No more old users to check, all instance users are checked.");
             break;
@@ -287,7 +360,7 @@ pub async fn old_users(
 
         for user in users {
             if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
-                if wait_interval().await {
+                if wait_interval(config.expressions.req_interval, &cancellation_token).await {
                     break 'main_loop;
                 }
                 reqs = 0;
