@@ -23,6 +23,7 @@ pub enum Lang {
     EnUs,
     ArSa,
     RuRu,
+    DeDe,
 }
 
 impl Lang {
@@ -32,6 +33,7 @@ impl Lang {
             Lang::EnUs => "en-us",
             Lang::ArSa => "ar-sa",
             Lang::RuRu => "ru-ru",
+            Lang::DeDe => "de-de",
         }
     }
 }

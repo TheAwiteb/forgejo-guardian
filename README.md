@@ -345,8 +345,8 @@ Telegram bot configuration section, with the following fields:
 -   `token`: Telegram bot token **required, if the section is enabled**
 -   `chat`: Chat ID to send the alerts to (Can be a group or a channel or a
     user) **required, if the section is enabled**
--   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and
-    `ru-ru` are supported) **required, if the section is enabled**
+-   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us`, 
+    `ru-ru` and `de-de` are supported) **required, if the section is enabled**
 
 ```toml
 [telegram]
@@ -365,8 +365,8 @@ Matrix bot configuration section, with the following fields:
 -   `username`: Bot username **required, if the section is enabled**
 -   `password`: Bot password **required, if the section is enabled**
 -   `room`: Room ID to send the alerts to **required, if the section is enabled**
--   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us` and
-    `ru-ru` are supported) **required, if the section is enabled**
+-   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us`,
+    `ru-ru` and `de-de` are supported) **required, if the section is enabled**
 
 ```toml
 [matrix]

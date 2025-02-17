@@ -1,0 +1,48 @@
+[messages]
+help_start = "Hallo, ich bin forgejo-guardian, ich werde euch Benachrichtigungen über verdächtige Benutzer schicken, und auf eure Zustimmung oder Ablehung warten, sie zu verbannen.\n\nMein Quellcode: https://git.4rs.nl/awiteb/forgejo-guardian"
+sus_alert = """Verdächtiger Benutzer erkannt! 🚨
+• Benutzer ID: %{user_id}
+• Benutzername: %{username}
+• Email: %{email}
+• Vollständiger Name: %{full_name}
+• Biografie: %{bio}
+• Webseite: %{website}
+• Profil: %{profile}
+• Grund: %{reason}
+
+Möchtest du diesen Benutzer verbannen?
+"""
+ban_notify = """Benutzer wurde verbannt (%{action}) ⛔
+• Benutzer ID: %{user_id}
+• Benutzername: %{username}
+• Email: %{email}
+• Vollständiger Name: %{full_name}
+• Biografie: %{bio}
+• Webseite: %{website}
+• Profil: %{profile}
+• Grund: %{reason}
+"""
+ban_request = """Auf einen aktiven Benutzer trifft eine Regel zu, möchtest du ihn verbannen? (%{action}) ⛔
+• Benutzer ID: %{user_id}
+• Benutzername: %{username}
+• Email: %{email}
+• Vollständiger Name: %{full_name}
+• Biografie: %{bio}
+• Webseite: %{website}
+• Profil: %{profile}
+• Grund: %{reason}
+"""
+
+ban_success = "Der Benutzer wurde erfolgreich verbannt ⛔"
+ban_failed  = "Der Benuzter konnte nicht verbannt werden! ⚠️"
+ban_denied  = "Der Benutzer wurde ignoriert ⚠️"
+
+[words]
+not_found = "nicht gefunden"
+not_specified = "keine Angabe"
+purge     = "löschen"
+suspend   = "sperren"
+
+[buttons]
+ban    = "verbannen (%{action}) ⛔"
+ignore = "ignorieren ⚠️"
