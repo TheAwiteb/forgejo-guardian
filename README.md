@@ -264,6 +264,7 @@ interval = "7d"
 Expressions configuration section, with the following fields:
 
 -   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
+-   `updated_users`: If set to `true`, the guardian will check the updated users (default: `false`)
 -   `safe_mode`: Prevents purge active users immediately. If a user matches the
     ban expressions but is active, a ban request is sent to the moderation team
     for review instead of purge the user directly

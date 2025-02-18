@@ -6,6 +6,7 @@ extern crate rust_i18n;
 
 use std::{process::ExitCode, sync::Arc, time::Duration};
 
+use forgejo_api::Sort;
 use tokio::{signal::ctrl_c, sync};
 use tokio_util::sync::CancellationToken;
 
@@ -98,6 +99,11 @@ async fn try_main() -> error::GuardResult<()> {
         );
         tracing::info!(
             config = "expressions",
+            "Fetch updated users: {}",
+            config.expressions.updated_users
+        );
+        tracing::info!(
+            config = "expressions",
             "Interval between each fetch: {} seconds",
             config.expressions.interval
         );
@@ -108,12 +114,24 @@ async fn try_main() -> error::GuardResult<()> {
         );
 
         tokio::spawn(users_fetcher::users_fetcher(
+            Sort::Newest,
             Arc::clone(&config),
             Arc::clone(&database),
             cancellation_token.clone(),
-            sus_sender,
+            sus_sender.clone(),
             ban_sender.clone(),
         ));
+
+        if config.expressions.updated_users {
+            tokio::spawn(users_fetcher::users_fetcher(
+                Sort::RecentUpdate,
+                Arc::clone(&config),
+                Arc::clone(&database),
+                cancellation_token.clone(),
+                sus_sender,
+                ban_sender.clone(),
+            ));
+        }
 
         if !config.expressions.only_new_users {
             tracing::info!(

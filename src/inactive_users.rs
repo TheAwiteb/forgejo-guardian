@@ -13,7 +13,7 @@ use url::Url;
 use crate::{
     config::{BanAction, Config},
     error::GuardResult,
-    forgejo_api::{self, ForgejoUser},
+    forgejo_api::{self, ForgejoUser, Sort},
 };
 
 const LIMIT: u32 = 30;
@@ -198,7 +198,7 @@ async fn inactive_checker(
             &config.forgejo.token,
             LIMIT,
             page,
-            "oldest",
+            &Sort::Oldest,
         )
         .await;
         let users = match users {

@@ -19,7 +19,7 @@ use crate::{
     config::Config,
     db::IgnoredUsersTableTrait,
     error::GuardResult,
-    forgejo_api::{self, get_users, ForgejoUser},
+    forgejo_api::{self, ForgejoUser, Sort},
     inactive_users,
     traits::ExprChecker,
 };
@@ -41,12 +41,12 @@ async fn wait_interval(req_interval: u32, cancellation_token: &CancellationToken
     }
 }
 
-/// Get the new instance users, the vector may be empty if there are no new
-/// users
+/// Get the instance users, the vector may be empty if there are no users
 ///
 /// Forgejo use intger ids for the users, so we can use the last user id to get
-/// the new users.
-async fn get_new_users(
+/// the users.
+async fn get_users(
+    sort: &Sort,
     request_client: &reqwest::Client,
     last_user_id: usize,
     config: &Config,
@@ -55,6 +55,7 @@ async fn get_new_users(
     let mut page = 1;
     let mut reqs = 0;
     let mut retries = 0;
+    let mut found_last_updated = false;
     let mut users = Vec::new();
 
     loop {
@@ -71,21 +72,36 @@ async fn get_new_users(
             &config.forgejo.token,
             config.expressions.limit,
             page,
-            "newest",
+            sort,
         )
         .await
         {
             Ok(mut page_users) => {
                 retries = 0;
-                page_users.retain(|u| u.id > last_user_id);
-                page_users
+                match sort {
+                    Sort::Newest => {
+                        page_users.retain(|u| u.id > last_user_id);
+                        page_users
+                    }
+                    Sort::RecentUpdate => {
+                        let is_last_page =
+                            found_last_updated || page_users.iter().any(|u| u.id == last_user_id);
+                        let page_users: Vec<_> = page_users
+                            .into_iter()
+                            .take_while(|u| !found_last_updated && u.id != last_user_id)
+                            .collect();
+                        found_last_updated = is_last_page;
+                        page_users
+                    }
+                    _ => unreachable!("Oldest will not user this function"),
+                }
             }
             Err(err) => {
                 retries += 1;
-                tracing::error!("Failed to fetch new users page {page}: {err}");
+                tracing::error!("Failed to fetch {sort} users page {page}: {err}");
                 if retries >= MAX_RETRIES {
                     tracing::error!(
-                        "Failed to fetch new users page {page} after {MAX_RETRIES} retries."
+                        "Failed to fetch {sort} users page {page} after {MAX_RETRIES} retries."
                     );
                     return users;
                 }
@@ -95,7 +111,10 @@ async fn get_new_users(
             }
         };
         if page_users.is_empty() {
-            tracing::info!("Done fetching all new users, the total is {}", users.len());
+            tracing::info!(
+                "Done fetching all {sort} users, the total is {}",
+                users.len()
+            );
             break;
         }
         users.extend(page_users);
@@ -104,18 +123,19 @@ async fn get_new_users(
     users
 }
 
-/// Get the newest user id from the instance
-async fn get_newest_user_id(
+/// Get the least user id from the instance
+async fn get_least_user_id(
+    sort: &Sort,
     request_client: &reqwest::Client,
     config: &Config,
 ) -> GuardResult<usize> {
-    Ok(get_users(
+    Ok(forgejo_api::get_users(
         request_client,
         &config.forgejo.instance,
         &config.forgejo.token,
         1,
         1,
-        "newest",
+        sort,
     )
     .await?
     .first()
@@ -143,8 +163,8 @@ async fn is_user_protected(
         .await?)
 }
 
-/// Check if ban or suspect a new user, returns the number of sended requests
-async fn check_new_user(
+/// Check if ban or suspect a user, returns the number of sended requests
+async fn check_user(
     user: ForgejoUser,
     database: &Database,
     request_client: &reqwest::Client,
@@ -219,9 +239,11 @@ async fn check_new_user(
     0
 }
 
-/// Check for new users and send the suspected users to the channel and ban the
+/// Check for users and send the suspected users to the channel and ban the
 /// banned users
-async fn check_new_users(
+#[allow(clippy::too_many_arguments)]
+async fn check_users(
+    sort: Sort,
     last_user_id: Arc<AtomicUsize>,
     request_client: Arc<reqwest::Client>,
     database: Arc<Database>,
@@ -231,7 +253,8 @@ async fn check_new_users(
     ban_sender: Sender<UserAlert>,
 ) {
     let mut reqs = 0;
-    let new_users = get_new_users(
+    let users = get_users(
+        &sort,
         &request_client,
         last_user_id.load(Ordering::Relaxed),
         &config,
@@ -239,23 +262,39 @@ async fn check_new_users(
     )
     .await;
 
-    if new_users.is_empty() {
+    if users.is_empty() {
         return;
     }
 
-    if let Some(uid) = new_users.iter().max_by_key(|u| u.id).map(|u| u.id) {
-        tracing::debug!("New last user id: {uid}");
-        last_user_id.store(uid, Ordering::Relaxed);
+    match sort {
+        Sort::Newest => {
+            if let Some(uid) = users.iter().max_by_key(|u| u.id).map(|u| u.id) {
+                tracing::debug!("{sort} last user id: {uid}");
+                last_user_id.store(uid, Ordering::Relaxed);
+            }
+        }
+        Sort::RecentUpdate => {
+            last_user_id.store(
+                users.first().map(|u| u.id).unwrap_or_default(),
+                Ordering::Relaxed,
+            );
+        }
+        _ => unreachable!(),
     }
 
-    for user in new_users {
+    for user in users {
         if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
             if wait_interval(config.expressions.req_interval, &cancellation_token).await {
                 break;
             }
             reqs = 0;
         }
-        reqs += check_new_user(
+
+        if sort.is_recent_update() && user.is_new(config.expressions.interval) {
+            continue;
+        }
+
+        reqs += check_user(
             user,
             &database,
             &request_client,
@@ -268,9 +307,10 @@ async fn check_new_users(
     }
 }
 
-/// The users fetcher, it will check for new users every period and send the
+/// The users fetcher, it will check for users every period and send the
 /// suspected users to the channel
 pub async fn users_fetcher(
+    sort: Sort,
     config: Arc<Config>,
     database: Arc<Database>,
     cancellation_token: CancellationToken,
@@ -278,18 +318,20 @@ pub async fn users_fetcher(
     ban_sender: Sender<UserAlert>,
 ) {
     let request_client = Arc::new(reqwest::Client::new());
-    let last_user_id = if let Ok(last_id) = get_newest_user_id(&request_client, &config).await {
+    let last_user_id = if let Ok(last_id) = get_least_user_id(&sort, &request_client, &config).await
+    {
         Arc::new(AtomicUsize::new(last_id))
     } else {
-        tracing::error!("Failed to get newest user id");
+        tracing::error!("Failed to get {sort} user id");
         return;
     };
 
-    tracing::info!("Starting users fetcher");
+    tracing::info!("Starting {sort} users fetcher");
     loop {
         tokio::select! {
             _ = tokio::time::sleep(Duration::from_secs(config.expressions.interval.into())) => {
-                tokio::spawn(check_new_users(
+                tokio::spawn(check_users(
+                    sort,
                     Arc::clone(&last_user_id),
                     Arc::clone(&request_client),
                     Arc::clone(&database),
@@ -300,7 +342,7 @@ pub async fn users_fetcher(
                 ));
             }
             _ = cancellation_token.cancelled() => {
-                tracing::info!("Users fetcher has been stopped successfully.");
+                tracing::info!("{sort} users fetcher has been stopped successfully.");
                 break
             }
         };
@@ -338,7 +380,7 @@ pub async fn old_users(
             &config.forgejo.token,
             config.expressions.limit,
             page,
-            "newest",
+            &Sort::Newest,
         )
         .await
         else {
@@ -366,7 +408,7 @@ pub async fn old_users(
                 reqs = 0;
             }
 
-            reqs += check_new_user(
+            reqs += check_user(
                 user,
                 &database,
                 &client,
