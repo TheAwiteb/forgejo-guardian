@@ -35,12 +35,15 @@ ban_request = """مستخدم نشط يطابق تعبيرات الحظر، هل
 ban_success = "تم حظر المستخدم بنجاح ⛔"
 ban_failed = "فشل حظر المستخدم! ⚠️"
 ban_denied = "تم تجاهل المستخدم ⚠️"
+ban_command_reason = "تم طلبه من قبل %{moderator} باستخدام أمر `%{prefix}ban`"
+can_not_ban_admin = "عذرًا، لا أستطيع حظر مسؤول."
+user_not_found = "لا يوجد مستخدم بهذا الاسم @%{username}"
 
 [words]
-not_found = "غير موجود"
+not_found     = "غير موجود"
 not_specified = "غير محدد"
-purge     = "ازالة المستخدم"
-suspend   = "تعليق"
+purge         = "ازالة المستخدم"
+suspend       = "تعليق"
 
 [buttons]
 ban    = "حظر (%{action}) ⛔"

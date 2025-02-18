@@ -51,12 +51,18 @@ alert or ban request, the bot will add two reactions to the message, one for
 banning the user and the other for ignoring the request, and the bot will listen
 to the reactions and act accordingly.
 
-##### Commands
-
-- `!ping`: To check if the bot is alive, the bot will reply with `Pong!`
-
 > [!NOTE]
-> You have to invite the bot to the room before running the guardian
+> You have to invite the bot to the room before running the guardia
+
+#### Commands
+
+The telegram prefix for the commands is `/`, and the matrix prefix is `!`. The
+commands are:
+
+-   `ping`: To check if the bot is alive, the bot will reply with `Pong!`
+-   `ban <username>`: To send a ban request for a user, the bot will send a
+    message to the admins with the user information and two buttons, one for
+    banning the user and the other for ignoring the request
 
 ### Database
 
@@ -187,7 +193,7 @@ The global section is the one that doesn't have a name, and it's in the top of t
 -   `database`: Database path to store ignored users and Matrix events, if you
     are using docker, the path should be inside the container, for example
     `/app/db.redb`, and you can mount it to the host machine, for example `-v
-    /path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
+/path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
     (default: `/app/db.redb`)
 
 ```toml
@@ -346,7 +352,7 @@ Telegram bot configuration section, with the following fields:
 -   `token`: Telegram bot token **required, if the section is enabled**
 -   `chat`: Chat ID to send the alerts to (Can be a group or a channel or a
     user) **required, if the section is enabled**
--   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us`, 
+-   `lang`: Language to use for the alerts (Currently only `ar-sa`, `en-us`,
     `ru-ru` and `de-de` are supported) **required, if the section is enabled**
 
 ```toml

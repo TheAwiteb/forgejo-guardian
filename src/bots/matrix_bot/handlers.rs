@@ -3,9 +3,12 @@
 
 use matrix_sdk::{
     event_handler::Ctx,
-    ruma::events::{
-        reaction::OriginalSyncReactionEvent,
-        room::message::{MessageType, OriginalSyncRoomMessageEvent},
+    ruma::{
+        events::{
+            reaction::OriginalSyncReactionEvent,
+            room::message::{MessageType, OriginalSyncRoomMessageEvent},
+        },
+        EventId,
     },
     Room,
     RoomState,
@@ -14,9 +17,54 @@ use reqwest::Client;
 
 use super::{utils, MatrixBot};
 use crate::{
+    bots::{matrix_bot::users_handler, UserAlert},
+    config::RegexReason,
     db::{EventsTableTrait, IgnoredUsersTableTrait},
     forgejo_api,
 };
+
+/// Ban command handler
+pub async fn ban_command_handler(
+    event_id: &EventId,
+    bot: &MatrixBot,
+    moderator: &str,
+    username: &str,
+) {
+    if username.is_empty() {
+        return;
+    }
+
+    tracing::info!("{moderator} requesting a ban request for `@{username}`");
+    let Ok(user) = forgejo_api::get_user(username, &bot.config.forgejo).await else {
+        bot.reply_to(event_id, t!("messages.user_not_found", username = username))
+            .await;
+        return;
+    };
+    if user.is_admin {
+        bot.reply_to(event_id, t!("messages.can_not_ban_admin"))
+            .await;
+        return;
+    }
+    users_handler::send_ban_request(
+        bot,
+        UserAlert::new(
+            user,
+            RegexReason::new(
+                Vec::new(),
+                Some(
+                    t!(
+                        "messages.ban_command_reason",
+                        moderator = moderator,
+                        prefix = "!"
+                    )
+                    .into_owned(),
+                ),
+            ),
+        ),
+        &bot.config.expressions.ban_action,
+    )
+    .await;
+}
 
 impl MatrixBot {
     pub async fn on_room_reaction(
@@ -111,9 +159,13 @@ impl MatrixBot {
         let MessageType::Text(text) = &event.content.msgtype else {
             return;
         };
+        let moderator = event.sender.as_str();
 
         if text.body == "!ping" {
             bot.reply_to(&event.event_id, "Pong!").await;
+        }
+        if let Some(("!ban", username)) = text.body.split_once(" ") {
+            ban_command_handler(&event.event_id, &bot, moderator, username).await;
         }
     }
 }

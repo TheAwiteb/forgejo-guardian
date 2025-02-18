@@ -86,9 +86,19 @@ pub async fn send_ban_request(
 ) -> ResponseResult<()> {
     tracing::info!("Sending ban request to the admins chat");
 
+    let msg = if re.re_vec.is_empty() {
+        t!("messages.ban_request")
+            .split("\n")
+            .skip(1)
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        t!("messages.ban_request").into_owned()
+    };
+
     let action = action_word(&config.expressions.ban_action);
     let keyboard = make_ban_ignore_keyboard(&user, &action);
-    let caption = user_details("messages.ban_request", &user, re, &action);
+    let caption = user_details(&msg, &user, re, &action);
 
     bot.send_photo(telegram.chat, InputFile::url(user.avatar_url))
         .caption(caption)

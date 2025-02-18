@@ -19,7 +19,7 @@ pub enum Locations {
 impl fmt::Display for Locations {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Locations::Unknown => write!(f, "unknown"),
+            Locations::Unknown => write!(f, "N/A"),
             Locations::Username => write!(f, "username"),
             Locations::FullName => write!(f, "full name"),
             Locations::Biographie => write!(f, "biography"),

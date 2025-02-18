@@ -19,9 +19,9 @@ async fn send_alert(
     bot: &MatrixBot,
     alert: &UserAlert,
     action: &BanAction,
-    msg_name: &str,
+    msg: &str,
 ) -> Option<OwnedEventId> {
-    let caption = user_details(msg_name, &alert.user, &alert.reason, &action_word(action));
+    let caption = user_details(msg, &alert.user, &alert.reason, &action_word(action));
     bot.send_image(alert.user.avatar_url.clone(), caption).await
 }
 
@@ -36,9 +36,21 @@ pub async fn send_sus_alert(bot: &MatrixBot, alert: UserAlert, action: &BanActio
     }
 }
 
-/// Send a ban request alert and add the event to the database
+/// Send a ban request alert and add the event to the database. If the regex is
+/// empty then this is a ban request with non-matching users, so the first line
+/// of the message will be deleted
 pub async fn send_ban_request(bot: &MatrixBot, alert: UserAlert, action: &BanAction) {
-    let Some(event_id) = send_alert(bot, &alert, action, "messages.ban_request").await else {
+    let msg = if alert.reason.re_vec.is_empty() {
+        t!("messages.ban_request")
+            .split("\n")
+            .skip(1)
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        t!("messages.ban_request").into_owned()
+    };
+
+    let Some(event_id) = send_alert(bot, &alert, action, &msg).await else {
         return;
     };
     bot.send_ok_no_reaction(&event_id).await;

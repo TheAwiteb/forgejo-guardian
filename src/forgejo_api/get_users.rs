@@ -6,7 +6,10 @@ use std::fmt;
 use reqwest::Method;
 
 use super::ForgejoUser;
-use crate::error::{GuardError, GuardResult};
+use crate::{
+    config::Forgejo,
+    error::{GuardError, GuardResult},
+};
 
 /// Sort order for the users
 #[derive(Clone, Copy)]
@@ -41,6 +44,31 @@ impl fmt::Display for Sort {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+/// Returns the user from the instance
+pub async fn get_user(username: &str, forgejo: &Forgejo) -> GuardResult<ForgejoUser> {
+    let req = super::build_request(
+        Method::GET,
+        &forgejo.instance,
+        &forgejo.token,
+        &format!("/api/v1/users/{username}"),
+    );
+    let url = req.url().clone();
+
+    let res = reqwest::Client::new().execute(req).await?;
+
+    if !res.status().is_success() {
+        return Err(GuardError::InvalidForgejoResponse(
+            format!("Status code: {status}", status = res.status()),
+            url,
+        ));
+    }
+
+    tracing::debug!("Get user {username} response: {res:?}");
+
+    serde_json::from_str(&res.text().await?)
+        .map_err(|err| GuardError::InvalidForgejoResponse(err.to_string(), url))
 }
 
 /// Returns the first page of users from the instance
