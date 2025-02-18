@@ -35,7 +35,7 @@ ban_request = """Auf einen aktiven Benutzer trifft eine Regel zu, möchtest du i
 
 ban_success        = "Der Benutzer wurde erfolgreich verbannt ⛔"
 ban_failed         = "Der Benuzter konnte nicht verbannt werden! ⚠️"
-ban_denied         = "Der Benutzer wurde ignoriert ⚠️"
+ban_denied         = "Der Benutzer wurde ignoriert"
 ban_command_reason = "Angefordert von %{moderator} mit dem `%{prefix}ban` Befehl"
 can_not_ban_admin  = "Entschuldigung, ich kann keinen Admin verbannen."
 user_not_found     = "Es gibt keinen Benutzer mit diesem Benutzernamen @%{username}"
@@ -48,4 +48,4 @@ suspend       = "sperren"
 
 [buttons]
 ban    = "verbannen (%{action}) ⛔"
-ignore = "ignorieren ⚠️"
+ignore = "ignorieren 🆗"

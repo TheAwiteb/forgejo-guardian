@@ -35,7 +35,7 @@ ban_request = """An active user matching the ban expressions, do you want to ban
 
 ban_success        = "User has been banned successfully ⛔"
 ban_failed         = "Failed to ban the user! ⚠️"
-ban_denied         = "User has been ignored ⚠️"
+ban_denied         = "User has been ignored"
 ban_command_reason = "Requested by %{moderator} using `%{prefix}ban` command"
 can_not_ban_admin  = "Sorry, I can't ban an admin."
 user_not_found     = "There is no user with this username @%{username}"
@@ -49,4 +49,4 @@ suspend       = "suspend"
 
 [buttons]
 ban    = "Ban (%{action}) ⛔"
-ignore = "Ignore ⚠️"
+ignore = "Ignore 🆗"
