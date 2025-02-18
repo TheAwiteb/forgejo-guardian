@@ -110,7 +110,7 @@ services:
         image: git.4rs.nl/awiteb/forgejo-guardian:0.5
         volumes:
             - ./forgejo-guardian.toml:/app/forgejo-guardian.toml:ro
-            #- ./db.redb:/app/db.redb # If you are using Matrix bot
+            - ./db.redb:/app/db.redb
 ```
 
 Make sure to have the `forgejo-guardian.toml` file in the same directory as the `docker-compose.yml` file, then you can run the following command:
