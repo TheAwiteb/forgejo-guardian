@@ -94,8 +94,8 @@ async fn try_main() -> error::GuardResult<()> {
         );
         tracing::info!(
             config = "expressions",
-            "Only fetch new users: {}",
-            config.expressions.only_new_users
+            "check existing users: {}",
+            config.expressions.check_existing_users
         );
         tracing::info!(
             config = "expressions",
@@ -111,6 +111,16 @@ async fn try_main() -> error::GuardResult<()> {
             config = "expressions",
             "Users to fetch per request: {}",
             config.expressions.limit
+        );
+        tracing::info!(
+            config = "expressions",
+            "Request limit for user fetcher: {}",
+            config.expressions.req_limit
+        );
+        tracing::info!(
+            config = "expressions",
+            "Interval when hitting the limit for user fetcher: {} seconds",
+            config.expressions.req_interval
         );
 
         tokio::spawn(users_fetcher::users_fetcher(
@@ -133,18 +143,7 @@ async fn try_main() -> error::GuardResult<()> {
             ));
         }
 
-        if !config.expressions.only_new_users {
-            tracing::info!(
-                config = "expressions",
-                "Request limit for old users: {}",
-                config.expressions.req_limit
-            );
-            tracing::info!(
-                config = "expressions",
-                "Interval when hitting the limit for old users: {} seconds",
-                config.expressions.req_interval
-            );
-
+        if config.expressions.check_existing_users {
             tokio::spawn(users_fetcher::old_users(
                 Arc::clone(&config),
                 Arc::clone(&database),

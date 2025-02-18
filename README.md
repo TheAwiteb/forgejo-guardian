@@ -271,15 +271,15 @@ interval = "7d"
 
 Expressions configuration section, with the following fields:
 
--   `only_new_users`: If set to `true`, the guardian will only check the new users, and not the existing ones (default: `false`)
+-   `check_existing_users`: If set to `true`, the guardian will check the existing users bisides the new users (default: `false`)
 -   `updated_users`: If set to `true`, the guardian will check the updated users (default: `false`)
 -   `safe_mode`: Prevents purge active users immediately. If a user matches the
     ban expressions but is active, a ban request is sent to the moderation team
     for review instead of purge the user directly
 -   `interval`: Interval to check for new users in seconds (default: `300s`)
 -   `limit`: Limit of users to fetch in each interval (default: `100`)
--   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`) \*
--   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`) \*
+-   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`)
+-   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)
 -   `ban_alert`: Send a notification when a user is banned (default: `false`)
 -   `ban_action`: The action to take when a user is banned, can be one of the following:
     -   `purge` (default): Forcibly delete user and any repositories, organizations, and
@@ -297,8 +297,6 @@ The `expressions.interval` and `expressions.req_interval` have the following suf
 -   `m`: Minutes
 -   `h`: Hours
 -   `d`: Days
-
-\*: Only for checking old users, if `only_new_users` is set to `true`, the guardian will not use these values.
 
 `ban` and `sus` are tables, and each one have the following fields:
 
@@ -320,7 +318,7 @@ Each field is an array of regular expressions, the regular expression can be one
 
 ```toml
 [expressions]
-only_new_users = true
+check_existing_users = true
 interval = 40
 limit = 50
 ban_alert = false
