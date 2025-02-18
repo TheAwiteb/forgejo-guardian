@@ -39,7 +39,7 @@ ban_denied         = "User has been ignored"
 ban_command_reason = "Requested by %{moderator} using `%{prefix}ban` command"
 can_not_ban_admin  = "Sorry, I can't ban an admin."
 user_not_found     = "There is no user with this username @%{username}"
-
+hidden             = "Hidden by bot operator"
 
 [words]
 not_found     = "Not found"

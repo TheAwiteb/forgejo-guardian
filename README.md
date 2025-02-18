@@ -195,6 +195,8 @@ The global section is the one that doesn't have a name, and it's in the top of t
     `/app/db.redb`, and you can mount it to the host machine, for example `-v
 /path/to/db.redb:/app/db.redb`. The db file extension should be `.redb`
     (default: `/app/db.redb`)
+-   `hide_user_email`: If set to `true`, the guardian will hide the user email
+    in the alerts (default: `false`)
 
 ```toml
 dry_run  = true

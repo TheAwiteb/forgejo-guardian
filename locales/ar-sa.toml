@@ -38,6 +38,7 @@ ban_denied = "تم تجاهل المستخدم"
 ban_command_reason = "تم طلبه من قبل %{moderator} باستخدام أمر `%{prefix}ban`"
 can_not_ban_admin = "عذرًا، لا أستطيع حظر مسؤول."
 user_not_found = "لا يوجد مستخدم بهذا الاسم @%{username}"
+hidden = "مخفي من قبل مشغل البوت"
 
 [words]
 not_found     = "غير موجود"

@@ -267,27 +267,29 @@ pub struct Exprs {
 pub struct Config {
     /// Dry run, without banning the users
     #[serde(default)]
-    pub dry_run:     bool,
+    pub dry_run:         bool,
     /// Events database path, must end with `.redb`
     #[serde(
         default = "defaults::database",
         deserialize_with = "deserializers::db_path"
     )]
-    pub database:    PathBuf,
+    pub database:        PathBuf,
+    /// Don't display user's email
+    pub hide_user_email: bool,
     /// Inactive users configuration
     #[serde(default)]
-    pub inactive:    Inactive,
+    pub inactive:        Inactive,
     /// Configuration for the forgejo guard itself
-    pub forgejo:     Forgejo,
+    pub forgejo:         Forgejo,
     /// Configuration of the telegram bot
     #[serde(default)]
-    pub telegram:    Telegram,
+    pub telegram:        Telegram,
     /// Configuration of the matrix bot
     #[serde(default)]
-    pub matrix:      Matrix,
+    pub matrix:          Matrix,
     /// The expressions, which are used to determine the actions
     #[serde(default)]
-    pub expressions: Exprs,
+    pub expressions:     Exprs,
 }
 
 impl BanAction {

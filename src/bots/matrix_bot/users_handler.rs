@@ -21,7 +21,13 @@ async fn send_alert(
     action: &BanAction,
     msg: &str,
 ) -> Option<OwnedEventId> {
-    let caption = user_details(msg, &alert.user, &alert.reason, &action_word(action));
+    let caption = user_details(
+        msg,
+        &alert.user,
+        &alert.reason,
+        &action_word(action),
+        &bot.config,
+    );
     bot.send_image(alert.user.avatar_url.clone(), caption).await
 }
 

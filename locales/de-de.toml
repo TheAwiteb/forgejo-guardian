@@ -39,6 +39,7 @@ ban_denied         = "Der Benutzer wurde ignoriert"
 ban_command_reason = "Angefordert von %{moderator} mit dem `%{prefix}ban` Befehl"
 can_not_ban_admin  = "Entschuldigung, ich kann keinen Admin verbannen."
 user_not_found     = "Es gibt keinen Benutzer mit diesem Benutzernamen @%{username}"
+hidden             = "Vom Bot-Betreiber versteckt"
 
 [words]
 not_found     = "nicht gefunden"

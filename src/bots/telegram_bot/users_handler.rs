@@ -48,7 +48,7 @@ pub async fn send_sus_alert(
     let action = action_word(&config.expressions.ban_action);
     let keyboard = make_ban_ignore_keyboard(&sus_user, &action);
 
-    let caption = user_details("messages.sus_alert", &sus_user, re, &action);
+    let caption = user_details("messages.sus_alert", &sus_user, re, &action, config);
     bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .reply_markup(keyboard)
@@ -68,7 +68,7 @@ pub async fn send_ban_notify(
     tracing::info!("Sending ban notification to the admins chat");
 
     let action = action_word(&config.expressions.ban_action);
-    let caption = user_details("messages.ban_notify", &sus_user, re, &action);
+    let caption = user_details("messages.ban_notify", &sus_user, re, &action, config);
     bot.send_photo(telegram.chat, InputFile::url(sus_user.avatar_url))
         .caption(caption)
         .await?;
@@ -98,7 +98,7 @@ pub async fn send_ban_request(
 
     let action = action_word(&config.expressions.ban_action);
     let keyboard = make_ban_ignore_keyboard(&user, &action);
-    let caption = user_details(&msg, &user, re, &action);
+    let caption = user_details(&msg, &user, re, &action, config);
 
     bot.send_photo(telegram.chat, InputFile::url(user.avatar_url))
         .caption(caption)

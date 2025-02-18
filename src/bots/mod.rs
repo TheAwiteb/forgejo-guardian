@@ -75,13 +75,25 @@ pub fn not_found_if_empty(text: &str) -> Cow<'_, str> {
 }
 
 /// Generate a user details message
-pub fn user_details(msg: &str, user: &ForgejoUser, re: &RegexReason, action: &str) -> String {
+pub fn user_details(
+    msg: &str,
+    user: &ForgejoUser,
+    re: &RegexReason,
+    action: &str,
+    config: &Config,
+) -> String {
+    let user_email = if config.hide_user_email {
+        t!("messages.hidden")
+    } else {
+        Cow::Borrowed(user.email.as_str())
+    };
+
     t!(
         msg,
         action = action,
         user_id = user.id,
         username = user.username,
-        email = user.email,
+        email = user_email,
         full_name = not_found_if_empty(&user.full_name),
         bio = not_found_if_empty(&user.biography),
         website = not_found_if_empty(&user.website),

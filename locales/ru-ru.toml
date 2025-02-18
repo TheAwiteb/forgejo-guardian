@@ -38,6 +38,7 @@ ban_denied = "Пользователь был проигнорирован"
 ban_command_reason = "Запрошено %{moderator} с помощью команды `%{prefix}ban`"
 can_not_ban_admin = "Извините, я не могу забанить админа."
 user_not_found = "Пользователь с таким именем пользователя @%{username} не найден"
+hidden = "Скрыто оператором бота"
 
 [words]
 not_found     = "Не найдено"
