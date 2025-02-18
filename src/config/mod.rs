@@ -217,7 +217,7 @@ pub struct Exprs {
     pub check_existing_users: bool,
     /// Check updated users also
     #[serde(default)]
-    pub updated_users:        bool,
+    pub check_updated_users:  bool,
     /// Interval to check for new users in seconds
     #[serde(
         default = "defaults::expressions::interval",
@@ -393,7 +393,7 @@ impl Default for Exprs {
     fn default() -> Self {
         Self {
             check_existing_users: false,
-            updated_users:        false,
+            check_updated_users:  false,
             ban_alert:            false,
             safe_mode:            false,
             interval:             defaults::expressions::interval(),

@@ -100,7 +100,7 @@ async fn try_main() -> error::GuardResult<()> {
         tracing::info!(
             config = "expressions",
             "Fetch updated users: {}",
-            config.expressions.updated_users
+            config.expressions.check_updated_users
         );
         tracing::info!(
             config = "expressions",
@@ -132,7 +132,7 @@ async fn try_main() -> error::GuardResult<()> {
             ban_sender.clone(),
         ));
 
-        if config.expressions.updated_users {
+        if config.expressions.check_updated_users {
             tokio::spawn(users_fetcher::users_fetcher(
                 Sort::RecentUpdate,
                 Arc::clone(&config),
