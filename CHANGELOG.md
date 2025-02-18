@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  bot command to ban a user ([**#43**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/43)) ([`54c551b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/54c551bf9a119d7600f93db2c38dd60a740721fd))
 ### Changed
 -  New local `not_specified` used for the regex reason ([`2c76dce`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2c76dce21e613686702039c10645c4aefd1e5330))
+-  Rename `only_new_users` to `check_existing_users` ([**#48**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/48)) ([`e7f92d7`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/e7f92d7f8f312512a17d1f0f2c5a25c0d61d3ba2))
+    - **BC**:  Rename `expressions.only_new_users` to `expressions.check_existing_users`
 -  Fetch all new users instead of only the first page ([**#39**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/39)) ([`f79b5c8`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f79b5c8f77cdf889a0f5977c8f8f0503cc039bac))
 ### Fixed
 -  Fix safe mode condition ([`f741862`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f7418628a43772dad86340a40764f855ca473864))
