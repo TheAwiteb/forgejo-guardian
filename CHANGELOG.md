@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Add support for Matrix bot alongside Telegram bot ([**#36**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/36)) ([`2e1c1d5`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2e1c1d5fe43154b6b41d3c02b2c997b8d296b12b))
 -  Don't send alerts of ignored users ([**#38**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/38)) ([`cb85d6e`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/cb85d6ef742a7e80425b9e763ff61e93145c8c54))
 -  Update fetcher to fetch updated users ([**#42**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/42)) ([`4741909`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/474190902f999862bf6ac261150d661b1b2624cd))
+-  bot command to ban a user ([**#43**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/43)) ([`54c551b`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/54c551bf9a119d7600f93db2c38dd60a740721fd))
 ### Changed
 -  New local `not_specified` used for the regex reason ([`2c76dce`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/2c76dce21e613686702039c10645c4aefd1e5330))
 -  Fetch all new users instead of only the first page ([**#39**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/39)) ([`f79b5c8`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f79b5c8f77cdf889a0f5977c8f8f0503cc039bac))
