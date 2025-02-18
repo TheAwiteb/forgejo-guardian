@@ -274,6 +274,7 @@ pub struct Config {
         deserialize_with = "deserializers::db_path"
     )]
     pub database:        PathBuf,
+    #[serde(default)]
     /// Don't display user's email
     pub hide_user_email: bool,
     /// Inactive users configuration
