@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## unreleased
+### Fixed
+-  Prevent multiple alerts for the same user update ([`41efebc`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/41efebc5832343a7ec1dfb779c4303ab494cf633))
+
 ## [0.6.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.5.1..v0.6.0) - 2025-02-18
 ### Added
 -  Add German translation ([**#37**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/37)) ([`768c6a8`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/768c6a84893784b40e3b920f02d835a00903f349))
