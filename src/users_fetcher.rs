@@ -17,7 +17,7 @@ use tokio_util::sync::CancellationToken;
 use crate::{
     bots::UserAlert,
     config::Config,
-    db::IgnoredUsersTableTrait,
+    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait},
     error::GuardResult,
     forgejo_api::{self, ForgejoUser, Sort},
     inactive_users,
@@ -164,7 +164,9 @@ async fn is_user_protected(
 }
 
 /// Check if ban or suspect a user, returns the number of sended requests
+#[allow(clippy::too_many_arguments)]
 async fn check_user(
+    sort: &str,
     user: ForgejoUser,
     database: &Database,
     request_client: &reqwest::Client,
@@ -174,17 +176,22 @@ async fn check_user(
     ban_sender: Option<&Sender<UserAlert>>,
 ) -> u32 {
     if let Ok(true) = database.is_ignored(&user.username) {
-        tracing::info!("Ignore an ignored user `@{}`", user.username);
+        tracing::info!("({sort}) Ignore an ignored user `@{}`", user.username);
         return 0;
     }
+
+    let username = user.username.clone();
 
     if let Some(re) = config.expressions.ban.is_match(&user) {
         if is_user_protected(request_client, config, &user, &ban_sender)
             .await
             .unwrap_or_default()
-        //  | ^^^^^
-        //  | If there is an error don't send ban request
         {
+            if database.is_alerted(&username).is_ok_and(|b| b) {
+                // Don't send already alerted users
+                return 3;
+            }
+            database.add_alerted_user(&username).ok();
             ban_sender
                 .unwrap()
                 .send(UserAlert::new(user, re).safe_mode())
@@ -193,7 +200,7 @@ async fn check_user(
             return 3;
         }
 
-        tracing::info!("@{} has been banned because `{re}`", user.username);
+        tracing::info!("({sort}) @{} has been banned because `{re}`", username);
         if config.dry_run {
             // If it's a dry run, we don't need to ban the user
             if config.expressions.ban_alert && ban_sender.is_some() {
@@ -206,22 +213,28 @@ async fn check_user(
             return 0;
         }
 
-        if let Err(err) = forgejo_api::ban_user(
+        match forgejo_api::ban_user(
             request_client,
             &config.forgejo.instance,
             &config.forgejo.token,
-            &user.username,
+            &username,
             &config.expressions.ban_action,
         )
         .await
         {
-            tracing::error!("Error while banning a user: {err}");
-        } else if config.expressions.ban_alert && ban_sender.is_some() && !overwrite_ban_alert {
-            ban_sender
-                .unwrap()
-                .send(UserAlert::new(user, re))
-                .await
-                .ok();
+            Ok(_) => {
+                if config.expressions.ban_alert && ban_sender.is_some() && !overwrite_ban_alert {
+                    ban_sender
+                        .unwrap()
+                        .send(UserAlert::new(user, re))
+                        .await
+                        .ok();
+                }
+                database.remove_alerted_user(&username).ok();
+            }
+            Err(err) => {
+                tracing::error!("({sort}) Error while banning a user: {err}");
+            }
         }
         return if config.expressions.safe_mode && ban_sender.is_some() {
             4
@@ -229,7 +242,8 @@ async fn check_user(
             1
         };
     } else if let Some(re) = sus_sender.and(config.expressions.sus.is_match(&user)) {
-        tracing::info!("@{} has been suspected because `{re}`", user.username);
+        tracing::info!("({sort}) @{} has been suspected because `{re}`", username);
+        database.add_alerted_user(&username).ok();
         sus_sender
             .unwrap()
             .send(UserAlert::new(user, re))
@@ -290,11 +304,17 @@ async fn check_users(
             reqs = 0;
         }
 
-        if sort.is_recent_update() && user.is_new(config.expressions.interval) {
+        if (sort.is_recent_update() && user.is_new(config.expressions.interval))
+            || (sort.is_recent_update()
+                && config.expressions.ban.is_match(&user).is_none()
+                && database.is_alerted(&user.username).is_ok_and(|b| b))
+            || (user.is_admin)
+        {
             continue;
         }
 
         reqs += check_user(
+            sort.as_str(),
             user,
             &database,
             &request_client,
@@ -409,6 +429,7 @@ pub async fn old_users(
             }
 
             reqs += check_user(
+                "oldest",
                 user,
                 &database,
                 &client,

@@ -7,9 +7,11 @@ use redb::Database;
 
 use crate::error::GuardResult;
 
+mod alerted_users;
 mod events;
 mod ignored_users;
 
+pub use alerted_users::*;
 pub use events::*;
 pub use ignored_users::*;
 

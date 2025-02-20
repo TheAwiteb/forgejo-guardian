@@ -16,7 +16,11 @@ use teloxide::{
     },
 };
 
-use crate::{config::Config, db::IgnoredUsersTableTrait, forgejo_api};
+use crate::{
+    config::Config,
+    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait},
+    forgejo_api,
+};
 
 /// Inline keyboard with a single button that links to the Forgejo Guardian
 /// repository.
@@ -32,9 +36,9 @@ fn source_inline_keyboard(text: &str) -> InlineKeyboardMarkup {
 /// Handle callback queries from the inline keyboard.
 pub async fn callback_handler(
     bot: Bot,
-    database: Arc<Database>,
     callback_query: CallbackQuery,
     config: Arc<Config>,
+    database: Arc<Database>,
 ) -> ResponseResult<()> {
     let Some(callback_data) = callback_query.data else {
         return Ok(());
@@ -66,6 +70,7 @@ pub async fn callback_handler(
                     .map(|u| format!("@{u}"))
                     .unwrap_or_else(|| format!("id={}", callback_query.from.id));
 
+                database.remove_alerted_user(data).ok();
                 tracing::info!("Moderation team has banned @{data}, the moderator is {moderator}",);
                 t!("messages.ban_success")
             } else {
@@ -86,6 +91,7 @@ pub async fn callback_handler(
                     .await?;
             }
             database.add_ignored_user(data).ok();
+            database.remove_alerted_user(data).ok();
         }
         _ => {}
     };

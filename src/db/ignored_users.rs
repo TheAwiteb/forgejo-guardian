@@ -10,7 +10,7 @@ const IGNORED_USERS_TABLE: TableDefinition<&str, ()> = TableDefinition::new("ign
 
 #[easy_ext::ext(IgnoredUsersTableTrait)]
 impl Database {
-    // Add a new ignored user to the database
+    /// Add a new ignored user to the database
     pub fn add_ignored_user(&self, username: &str) -> GuardResult<()> {
         tracing::info!("Adding ignored user: {username}");
         let write_txn = self.begin_write()?;

@@ -19,7 +19,7 @@ use super::{utils, MatrixBot};
 use crate::{
     bots::{matrix_bot::users_handler, UserAlert},
     config::RegexReason,
-    db::{EventsTableTrait, IgnoredUsersTableTrait},
+    db::{AlertedUsersTableTrait, EventsTableTrait, IgnoredUsersTableTrait},
     forgejo_api,
 };
 
@@ -121,6 +121,7 @@ impl MatrixBot {
                 tracing::info!(
                     "Moderation team has banned @{username}, the moderator is {moderator}",
                 );
+                bot.db.remove_alerted_user(&username).ok();
                 t!("messages.ban_success")
             } else {
                 t!("messages.ban_failed")
@@ -141,6 +142,7 @@ impl MatrixBot {
             )
             .await;
             bot.db.add_ignored_user(&username).ok();
+            bot.db.remove_alerted_user(&username).ok();
         }
 
         bot.db.remove_event(&reply_to_event_id).ok();
