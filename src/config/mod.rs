@@ -52,13 +52,6 @@ pub struct Inactive {
     /// Source ID to exclude
     #[serde(default)]
     pub source_id_exclude: Vec<u32>,
-    /// Check if the user has tokens, if true the user will not be considered
-    #[serde(default = "defaults::bool_true")]
-    pub check_tokens:      bool,
-    /// Check if the user has OAuth2 applications, if true the user will not be
-    /// considered
-    #[serde(default = "defaults::bool_true")]
-    pub check_oauth2:      bool,
     /// Number of inactive days to consider
     #[serde(default = "defaults::inactive::days")]
     pub days:              u64,
@@ -277,6 +270,14 @@ pub struct Config {
     #[serde(default)]
     /// Don't display user's email
     pub hide_user_email: bool,
+    /// Check if the user has tokens, to consider it in safe mode or as an
+    /// inactive
+    #[serde(default = "defaults::bool_true")]
+    pub check_tokens:    bool,
+    /// Check if the user has OAuth2 applications, to consider it in safe mode
+    /// or as an inactive
+    #[serde(default = "defaults::bool_true")]
+    pub check_oauth2:    bool,
     /// Inactive users configuration
     #[serde(default)]
     pub inactive:        Inactive,
@@ -379,8 +380,6 @@ impl Default for Inactive {
             exclude:           Vec::new(),
             source_id:         Vec::new(),
             source_id_exclude: Vec::new(),
-            check_tokens:      true,
-            check_oauth2:      true,
             days:              defaults::inactive::days(),
             req_limit:         defaults::inactive::req_limit(),
             req_interval:      defaults::inactive::req_interval(),

@@ -178,6 +178,10 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 ### Structure
 
+> [!NOTE]
+> The field may start with a version, this version is the required Forgejo
+> version, so you can use this version or later
+
 In our configuration file you can have the following sections and the global section:
 
 -   `inactive`: Configuration for cleaning up inactive users
@@ -197,6 +201,10 @@ The global section is the one that doesn't have a name, and it's in the top of t
     (default: `/app/db.redb`)
 -   `hide_user_email`: If set to `true`, the guardian will hide the user email
     in the alerts (default: `false`)
+-   **v10.0.1** `check_tokens`: Check if the user has tokens, to consider them
+    in safe mode or as inactive (default: `true`)
+-   **v10.0.1** `check_oauth2`: Check if the user has OAuth2 applications, to
+    consider them in safe mode or as inactive (default: `true`)
 
 ```toml
 dry_run  = true
@@ -226,18 +234,10 @@ When enabled, users that never did anything on the instance will be deleted.
 
 Inactive users configuration section, with the following fields:
 
-> [!NOTE]
-> The field may start with a version, this version is the required Forgejo
-> version, so you can use this version or later
-
 -   `enabled`: Enable the cleanup of inactive users, inactive feature need `read:user` scope (default: `false`)
 -   `exclude`: List of usernames to exclude from the cleanup (default: `[]`)
 -   `source_id`: List of source IDs to only consider users from (default: `[]`)
 -   `source_id_exclude`: List of source IDs to exclude users from (default: `[]`)
--   **v10.0.1** `check_tokens`: Check if the user has tokens, if true the user
-    will not be considered (default: `true`)
--   **v10.0.1** `check_oauth2`: Check if the user has OAuth2 applications, if
-    true the user will not be considered (default: `true`)
 -   `days`: The number of days that a new user is given to become active. (default: `30`)
 -   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `4`)
 -   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `10m`)

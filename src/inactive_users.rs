@@ -122,8 +122,8 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
         &config.forgejo.instance,
         &config.forgejo.token,
         &user.username,
-        config.inactive.check_tokens,
-        config.inactive.check_oauth2,
+        config.check_tokens,
+        config.check_oauth2,
     )
     .await
     {
@@ -142,9 +142,7 @@ async fn check_user(req_client: &Client, config: &Config, user: ForgejoUser) -> 
                     tracing::error!("Error while ban inactive user `@{}`: {err}", user.username);
                 }
                 // activity feed, purge request and tokens (if sended)
-                return 2
-                    + usize::from(config.inactive.check_tokens)
-                    + usize::from(config.inactive.check_oauth2);
+                return 2 + usize::from(config.check_tokens) + usize::from(config.check_oauth2);
             }
         }
         Err(err) => {

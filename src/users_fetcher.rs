@@ -157,8 +157,8 @@ async fn is_user_protected(
             &config.forgejo.instance,
             &config.forgejo.token,
             &user.username,
-            config.inactive.check_tokens,
-            config.inactive.check_oauth2,
+            config.check_tokens,
+            config.check_oauth2,
         )
         .await?)
 }
