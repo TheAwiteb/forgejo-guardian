@@ -29,6 +29,15 @@ the user, and the `sus` will only alert the admins about the user and the admin
 can decide to ban the user or not. You can also
 set `expressions.ban_alert` to `true` to send a notification when a user is banned.
 
+#### Lazy purge
+
+If you enable `lazy_purge.enabled` in the configuration file, the guardian will
+not purge the user immediately. Instead, the purge will be delayed for the
+duration specified in `lazy_purge.purge_after`, allowing the moderation team to
+undo the action if needed. When lazy purge is enabled, the guardian will add an
+`undo` button to any ban action (suspension, ban request in safe mode, and
+banning using the `ban` command).
+
 ### Bots
 
 The guardian can send suspicious users, banned users, and ban request to the
@@ -184,10 +193,12 @@ We use `TOML` format for configuration, the default configuration file is `/app/
 
 In our configuration file you can have the following sections and the global section:
 
+-   `lazy_purge`: Lazy purge configuration, to delay the purge action
 -   `inactive`: Configuration for cleaning up inactive users
 -   `forgejo`: Forgejo instance configuration
 -   `expressions`: Regular expressions to match against
 -   `telegram`: Telegram bot configuration
+-   `matrix`: Matrix bot configuration
 
 #### Global section
 
@@ -342,6 +353,16 @@ usernames = ['^mod.*$']
 > set `interval` to a higher value (something like `600`) and `limit` to a lower
 > value (something like `50`), so the guardian will fetch latest 50 users every
 > 10 minutes, which should be enough for small instances.
+
+#### `lazy_purge`
+
+Lazy purge configuration section, with the following fields:
+
+-   `enabled`: Enable the lazy purge (default: `false`)
+-   `purge_after`: The duration to wait before purging the user (default: `2h`)
+-   `req_limit`: Maximum number of requests to send to the Forgejo instance within each interval (default: `200`) (Minimum: `1`)
+-   `req_interval`: Time interval to pause after reaching the `req_limit` (default: `2m`)
+-   `interval`: Time Interval to check to start purge purged users (default: `1h`)
 
 #### `telegram`
 

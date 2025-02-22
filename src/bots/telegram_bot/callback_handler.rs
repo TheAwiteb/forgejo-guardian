@@ -18,19 +18,28 @@ use teloxide::{
 
 use crate::{
     config::Config,
-    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait},
+    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait, PurgedUsersTableTrait},
     forgejo_api,
 };
 
 /// Inline keyboard with a single button that links to the Forgejo Guardian
-/// repository.
-fn source_inline_keyboard(text: &str) -> InlineKeyboardMarkup {
-    InlineKeyboardMarkup::new([[InlineKeyboardButton::new(
+/// repository. The undo button will be added if the username is `Some`
+fn source_inline_keyboard(text: &str, username: Option<&str>) -> InlineKeyboardMarkup {
+    let mut keyboard = vec![[InlineKeyboardButton::new(
         text,
         InlineKeyboardButtonKind::Url(
             url::Url::parse("https://git.4rs.nl/awiteb/forgejo-guardian").expect("Valid url"),
         ),
-    )]])
+    )]];
+
+    if let Some(username) = username {
+        keyboard.push([InlineKeyboardButton::new(
+            t!("buttons.undo"),
+            InlineKeyboardButtonKind::CallbackData(format!("u {username}")),
+        )]);
+    }
+
+    InlineKeyboardMarkup::new(keyboard)
 }
 
 /// Handle callback queries from the inline keyboard.
@@ -51,9 +60,10 @@ pub async fn callback_handler(
 
     match command {
         // Ban
-        "b" => {
+        "b" if !database.is_layz_purged(data).is_ok_and(|y| y) => {
             // ban the user
             let button_text = if config.dry_run
+                || config.lazy_purge.enabled
                 || forgejo_api::ban_user(
                     &Client::new(),
                     &config.forgejo.instance,
@@ -64,13 +74,18 @@ pub async fn callback_handler(
                 .await
                 .is_ok()
             {
+                if config.lazy_purge.enabled {
+                    database.add_purged_user(data).ok();
+                } else {
+                    database.remove_alerted_user(data).ok();
+                }
+
                 let moderator = callback_query
                     .from
                     .username
                     .map(|u| format!("@{u}"))
                     .unwrap_or_else(|| format!("id={}", callback_query.from.id));
 
-                database.remove_alerted_user(data).ok();
                 tracing::info!("Moderation team has banned @{data}, the moderator is {moderator}",);
                 t!("messages.ban_success")
             } else {
@@ -79,7 +94,10 @@ pub async fn callback_handler(
 
             if let Some(MaybeInaccessibleMessage::Regular(msg)) = callback_query.message {
                 bot.edit_message_reply_markup(msg.chat.id, msg.id)
-                    .reply_markup(source_inline_keyboard(&button_text))
+                    .reply_markup(source_inline_keyboard(
+                        &button_text,
+                        config.lazy_purge.enabled.then_some(data),
+                    ))
                     .await?;
             }
         }
@@ -87,11 +105,20 @@ pub async fn callback_handler(
         "i" => {
             if let Some(MaybeInaccessibleMessage::Regular(msg)) = callback_query.message {
                 bot.edit_message_reply_markup(msg.chat.id, msg.id)
-                    .reply_markup(source_inline_keyboard(&t!("messages.ban_denied")))
+                    .reply_markup(source_inline_keyboard(&t!("messages.ban_denied"), None))
                     .await?;
             }
             database.add_ignored_user(data).ok();
             database.remove_alerted_user(data).ok();
+        }
+        // Undo a purge
+        "u" if config.lazy_purge.enabled && database.is_layz_purged(data).is_ok_and(|y| y) => {
+            if let Some(MaybeInaccessibleMessage::Regular(msg)) = callback_query.message {
+                bot.edit_message_reply_markup(msg.chat.id, msg.id)
+                    .reply_markup(source_inline_keyboard(&t!("messages.undo_success"), None))
+                    .await?;
+            }
+            database.remove_purged_user(data).ok();
         }
         _ => {}
     };

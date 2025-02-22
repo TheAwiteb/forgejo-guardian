@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use std::{env, fs, path::PathBuf, str::FromStr};
+use std::{env, fs, path::PathBuf, str::FromStr, time::Duration};
 
+use tokio_util::sync::CancellationToken;
 use tracing::level_filters::LevelFilter;
 
 use crate::{
@@ -76,6 +77,12 @@ fn check_errors(config: &Config) -> GuardResult<()> {
         ));
     }
 
+    if !config.expressions.ban_action.is_purge() && config.lazy_purge.enabled {
+        return Err(GuardError::Other(
+            "Lazy purge is enabled, but the ban action is not set to `purge`".to_owned(),
+        ));
+    }
+
     Ok(())
 }
 
@@ -123,4 +130,13 @@ pub fn get_config() -> GuardResult<Config> {
     check_forgejo_token(&mut config)?;
 
     Ok(config)
+}
+
+/// Wait for the interval to pass, if the cancellation token is cancelled,
+/// return true, after the interval has passed return false
+pub async fn wait_interval(req_interval: u32, cancellation_token: &CancellationToken) -> bool {
+    tokio::select! {
+        _ = tokio::time::sleep(Duration::from_secs(req_interval.into())) => false,
+        _ = cancellation_token.cancelled() => true,
+    }
 }

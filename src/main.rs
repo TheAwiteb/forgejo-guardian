@@ -16,6 +16,7 @@ pub mod db;
 pub mod error;
 pub mod forgejo_api;
 pub mod inactive_users;
+pub mod lazy_purge;
 pub mod traits;
 pub mod users_fetcher;
 pub mod utils;
@@ -49,6 +50,11 @@ async fn try_main() -> error::GuardResult<()> {
     tracing::info!(
         "Sus expressions enabled: {}",
         config.expressions.sus.enabled
+    );
+    tracing::info!(
+        config = "lazy_purge",
+        "Lazy purge enabled: {}",
+        config.lazy_purge.enabled
     );
     tracing::debug!("The config exprs: {:#?}", config.expressions);
 
@@ -148,6 +154,34 @@ async fn try_main() -> error::GuardResult<()> {
                 Arc::clone(&config),
                 Arc::clone(&database),
                 ban_sender,
+                cancellation_token.clone(),
+            ));
+        }
+
+        if config.lazy_purge.enabled {
+            tracing::info!(
+                config = "lazy_purge",
+                "Interval between each fetch: {} seconds",
+                config.lazy_purge.interval
+            );
+            tracing::info!(
+                config = "lazy_purge",
+                "Request limit for user fetcher: {}",
+                config.lazy_purge.req_limit
+            );
+            tracing::info!(
+                config = "lazy_purge",
+                "Interval when hitting the limit for user fetcher: {} seconds",
+                config.lazy_purge.req_interval
+            );
+            tracing::info!(
+                config = "lazy_purge",
+                "Purge after: {} seconds",
+                config.lazy_purge.purge_after
+            );
+            tokio::spawn(lazy_purge::worker(
+                Arc::clone(&database),
+                Arc::clone(&config),
                 cancellation_token.clone(),
             ));
         }

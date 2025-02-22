@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use matrix_sdk::ruma::EventId;
-use redb::{Database, TableDefinition};
+use std::str::FromStr;
+
+use matrix_sdk::ruma::{EventId, OwnedEventId};
+use redb::{Database, ReadableTable, TableDefinition};
 
 use crate::error::GuardResult;
 
@@ -31,6 +33,28 @@ impl Database {
             table.remove(event.to_string().as_str())?;
         }
         write_txn.commit()?;
+        Ok(())
+    }
+
+    /// Remove user events
+    pub fn remove_user_events(&self, username: &str) -> GuardResult<()> {
+        let event_ids: Vec<_> = {
+            let read_txn = self.begin_read()?;
+            let table = read_txn.open_table(EVENTS_TABLE)?;
+            table
+                .iter()?
+                .filter_map(|e| {
+                    e.ok().and_then(|(eid, u)| {
+                        (u.value() == username).then_some(eid.value().to_owned())
+                    })
+                })
+                .collect()
+        };
+
+        for event_id in event_ids {
+            self.remove_event(&OwnedEventId::from_str(&event_id).expect("It's a valid event id"))
+                .ok();
+        }
         Ok(())
     }
 

@@ -17,29 +17,18 @@ use tokio_util::sync::CancellationToken;
 use crate::{
     bots::UserAlert,
     config::Config,
-    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait},
+    db::{AlertedUsersTableTrait, IgnoredUsersTableTrait, PurgedUsersTableTrait},
     error::GuardResult,
     forgejo_api::{self, ForgejoUser, Sort},
     inactive_users,
     traits::ExprChecker,
+    utils,
 };
 
 /// Maximum retries for fetching the users
 const MAX_RETRIES: u8 = 10;
 /// Base seconds for the retry interval
 const RETRY_INTERVAL: u8 = 30;
-
-/// Wait for the interval to pass, if the cancellation token is cancelled,
-/// return true, after the interval has passed return false
-async fn wait_interval(req_interval: u32, cancellation_token: &CancellationToken) -> bool {
-    tracing::debug!(
-        "Reached the request limit for old users checker. Waiting for {req_interval} seconds.",
-    );
-    tokio::select! {
-        _ = tokio_sleep(Duration::from_secs(req_interval.into())) => false,
-        _ = cancellation_token.cancelled() => true,
-    }
-}
 
 /// Get the instance users, the vector may be empty if there are no users
 ///
@@ -60,7 +49,7 @@ async fn get_users(
 
     loop {
         if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
-            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+            if utils::wait_interval(config.expressions.req_interval, &cancellation_token).await {
                 break;
             }
             reqs = 0;
@@ -180,6 +169,10 @@ async fn check_user(
         return 0;
     }
 
+    if let Ok(true) = database.is_layz_purged(&user.username) {
+        return 0;
+    }
+
     let username = user.username.clone();
 
     if let Some(re) = config.expressions.ban.is_match(&user) {
@@ -187,16 +180,14 @@ async fn check_user(
             .await
             .unwrap_or_default()
         {
-            if database.is_alerted(&username).is_ok_and(|b| b) {
-                // Don't send already alerted users
-                return 3;
+            if !database.is_alerted(&username).is_ok_and(|b| b) {
+                database.add_alerted_user(&username).ok();
+                ban_sender
+                    .unwrap()
+                    .send(UserAlert::new(user, re).safe_mode())
+                    .await
+                    .ok();
             }
-            database.add_alerted_user(&username).ok();
-            ban_sender
-                .unwrap()
-                .send(UserAlert::new(user, re).safe_mode())
-                .await
-                .ok();
             return 3;
         }
 
@@ -298,7 +289,7 @@ async fn check_users(
 
     for user in users {
         if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
-            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+            if utils::wait_interval(config.expressions.req_interval, &cancellation_token).await {
                 break;
             }
             reqs = 0;
@@ -387,7 +378,7 @@ pub async fn old_users(
     'main_loop: loop {
         // Enter the block if we cancelled, so will break
         if reqs >= config.expressions.req_limit || cancellation_token.is_cancelled() {
-            if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+            if utils::wait_interval(config.expressions.req_interval, &cancellation_token).await {
                 break;
             }
             reqs = 0
@@ -422,7 +413,8 @@ pub async fn old_users(
 
         for user in users {
             if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
-                if wait_interval(config.expressions.req_interval, &cancellation_token).await {
+                if utils::wait_interval(config.expressions.req_interval, &cancellation_token).await
+                {
                     break 'main_loop;
                 }
                 reqs = 0;

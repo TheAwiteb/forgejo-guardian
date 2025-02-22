@@ -10,10 +10,12 @@ use crate::error::GuardResult;
 mod alerted_users;
 mod events;
 mod ignored_users;
+mod lazy_purge;
 
 pub use alerted_users::*;
 pub use events::*;
 pub use ignored_users::*;
+pub use lazy_purge::*;
 
 /// Initialize the database, creating it if it doesn't exist.
 pub fn init_db(db_path: &Path) -> GuardResult<Database> {

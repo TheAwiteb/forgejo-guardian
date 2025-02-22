@@ -70,6 +70,11 @@ impl MatrixBot {
         t!("buttons.ignore")
     }
 
+    /// Returns the undo reaction
+    pub fn undo_reaction(&self) -> Cow<'_, str> {
+        t!("buttons.undo")
+    }
+
     /// Run the matrix bot, this will join the moderation room and start
     /// listening to events
     pub async fn run(self) {

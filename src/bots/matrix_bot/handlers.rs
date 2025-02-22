@@ -19,7 +19,7 @@ use super::{utils, MatrixBot};
 use crate::{
     bots::{matrix_bot::users_handler, UserAlert},
     config::RegexReason,
-    db::{AlertedUsersTableTrait, EventsTableTrait, IgnoredUsersTableTrait},
+    db::{AlertedUsersTableTrait, EventsTableTrait, IgnoredUsersTableTrait, PurgedUsersTableTrait},
     forgejo_api,
 };
 
@@ -106,8 +106,9 @@ impl MatrixBot {
             }
         };
 
-        if reaction == &bot.ban_reaction() {
+        if reaction == &bot.ban_reaction() && !bot.db.is_layz_purged(&username).is_ok_and(|y| y) {
             let ban_status = if bot.config.dry_run
+                || bot.config.lazy_purge.enabled
                 || forgejo_api::ban_user(
                     &Client::new(),
                     &bot.config.forgejo.instance,
@@ -118,10 +119,22 @@ impl MatrixBot {
                 .await
                 .is_ok()
             {
+                if bot.config.lazy_purge.enabled {
+                    bot.db.add_purged_user(&username).ok();
+                    bot.moderation_room
+                        .send(utils::make_reaction(
+                            &reply_to_event_id,
+                            &bot.undo_reaction(),
+                        ))
+                        .await
+                        .ok();
+                } else {
+                    bot.db.remove_alerted_user(&username).ok();
+                    bot.db.remove_user_events(&username).ok();
+                }
                 tracing::info!(
                     "Moderation team has banned @{username}, the moderator is {moderator}",
                 );
-                bot.db.remove_alerted_user(&username).ok();
                 t!("messages.ban_success")
             } else {
                 t!("messages.ban_failed")
@@ -133,7 +146,9 @@ impl MatrixBot {
                 Some([event.sender.clone()]),
             )
             .await;
-        } else if reaction == &bot.ignore_reaction() {
+        } else if reaction == &bot.ignore_reaction()
+            && !bot.db.is_layz_purged(&username).is_ok_and(|y| y)
+        {
             let new_caption = format!("{} ({moderator})\n\n{msg_text}", t!("messages.ban_denied"));
             bot.edit_msg_caption(
                 &reply_to_event_id,
@@ -143,9 +158,24 @@ impl MatrixBot {
             .await;
             bot.db.add_ignored_user(&username).ok();
             bot.db.remove_alerted_user(&username).ok();
-        }
+            bot.db.remove_user_events(&username).ok();
+        } else if reaction == &bot.undo_reaction()
+            && (bot.config.lazy_purge.enabled && bot.db.is_layz_purged(&username).is_ok_and(|y| y))
+        {
+            let new_caption = format!(
+                "{} ({moderator})\n\n{msg_text}",
+                t!("messages.undo_success")
+            );
+            bot.edit_msg_caption(
+                &reply_to_event_id,
+                new_caption,
+                Some([event.sender.clone()]),
+            )
+            .await;
 
-        bot.db.remove_event(&reply_to_event_id).ok();
+            bot.db.remove_purged_user(&username).ok();
+            bot.db.remove_user_events(&username).ok();
+        }
     }
 
     pub async fn on_room_message(

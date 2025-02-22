@@ -255,6 +255,38 @@ pub struct Exprs {
     pub sus:                  Expr,
 }
 
+/// Lazy purge configuration
+#[derive(Deserialize)]
+pub struct LazyPurge {
+    /// Whether the lazy purge is enabled
+    #[serde(default)]
+    pub enabled:      bool,
+    /// Interval to purge purged users
+    #[serde(
+        default = "defaults::lazy_purge::interval",
+        deserialize_with = "deserializers::suffix_interval"
+    )]
+    pub interval:     u32,
+    /// Maximum number of requests to send
+    #[serde(
+        default = "defaults::lazy_purge::req_limit",
+        deserialize_with = "deserializers::unsigned_minimum::<_, _, 1>"
+    )]
+    pub req_limit:    u16,
+    /// Interval when hitting the request limit
+    #[serde(
+        default = "defaults::lazy_purge::req_interval",
+        deserialize_with = "deserializers::suffix_interval"
+    )]
+    pub req_interval: u32,
+    /// Interval to purge the user after the moderation team decided to purge
+    #[serde(
+        default = "defaults::lazy_purge::purge_after",
+        deserialize_with = "deserializers::suffix_interval"
+    )]
+    pub purge_after:  u32,
+}
+
 /// forgejo-guard configuration
 #[derive(Deserialize)]
 pub struct Config {
@@ -278,6 +310,9 @@ pub struct Config {
     /// or as an inactive
     #[serde(default = "defaults::bool_true")]
     pub check_oauth2:    bool,
+    /// Lazy purge, to not purge the user immediately, but after a certain time
+    #[serde(default)]
+    pub lazy_purge:      LazyPurge,
     /// Inactive users configuration
     #[serde(default)]
     pub inactive:        Inactive,
@@ -418,6 +453,18 @@ impl Default for Matrix {
     fn default() -> Self {
         Self::Disabled {
             enabled: boolean::False,
+        }
+    }
+}
+
+impl Default for LazyPurge {
+    fn default() -> Self {
+        Self {
+            enabled:      false,
+            interval:     defaults::lazy_purge::interval(),
+            req_limit:    defaults::lazy_purge::req_limit(),
+            req_interval: defaults::lazy_purge::req_interval(),
+            purge_after:  defaults::lazy_purge::purge_after(),
         }
     }
 }

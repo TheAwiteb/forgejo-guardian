@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use redb::Database;
 use teloxide::{
     prelude::*,
     types::{InlineKeyboardButton, InlineKeyboardButtonKind, InlineKeyboardMarkup, InputFile},
@@ -14,6 +15,7 @@ use super::UserAlert;
 use crate::{
     bots::{action_word, user_details},
     config::{Config, RegexReason, TelegramData},
+    db::PurgedUsersTableTrait,
     forgejo_api::ForgejoUser,
 };
 
@@ -81,6 +83,7 @@ pub async fn send_ban_request(
     bot: &Bot,
     telegram: &TelegramData,
     re: &RegexReason,
+    is_layz_purged: bool,
     user: ForgejoUser,
     config: &Config,
 ) -> ResponseResult<()> {
@@ -97,8 +100,15 @@ pub async fn send_ban_request(
     };
 
     let action = action_word(&config.expressions.ban_action);
-    let keyboard = make_ban_ignore_keyboard(&user, &action);
     let caption = user_details(&msg, &user, re, &action, config);
+    let keyboard = if is_layz_purged {
+        InlineKeyboardMarkup::new([[InlineKeyboardButton::new(
+            t!("buttons.undo"),
+            InlineKeyboardButtonKind::CallbackData(format!("u {}", user.username)),
+        )]])
+    } else {
+        make_ban_ignore_keyboard(&user, &action)
+    };
 
     bot.send_photo(telegram.chat, InputFile::url(user.avatar_url))
         .caption(caption)
@@ -111,6 +121,7 @@ pub async fn send_ban_request(
 /// Handle the suspicious and banned users
 pub async fn users_handler(
     bot: Bot,
+    database: Arc<Database>,
     config: Arc<Config>,
     telegram: Arc<TelegramData>,
     cancellation_token: CancellationToken,
@@ -124,7 +135,16 @@ pub async fn users_handler(
             }
             Some(alert) = ban_receiver.recv() => {
                 if alert.safe_mode {
-                    send_ban_request(&bot,&telegram, &alert.reason, alert.user, &config).await.ok();
+                    send_ban_request(
+                        &bot,
+                        &telegram,
+                        &alert.reason,
+                        database.is_layz_purged(&alert.user.username).is_ok_and(|y|y),
+                        alert.user,
+                        &config
+                    )
+                    .await
+                    .ok();
                 } else {
                     send_ban_notify(&bot,&telegram, &alert.reason, alert.user, &config).await.ok();
                 }

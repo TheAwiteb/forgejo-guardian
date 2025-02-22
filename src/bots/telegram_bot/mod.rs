@@ -40,6 +40,7 @@ pub async fn start_bot(
 
     tokio::spawn(users_handler::users_handler(
         bot.clone(),
+        Arc::clone(&database),
         Arc::clone(&config),
         Arc::clone(&telegram),
         cancellation_token,

@@ -7,11 +7,11 @@ use matrix_sdk::ruma::OwnedEventId;
 use tokio::sync::mpsc::Receiver;
 use tokio_util::sync::CancellationToken;
 
-use super::MatrixBot;
+use super::{utils, MatrixBot};
 use crate::{
     bots::{action_word, user_details, UserAlert},
     config::{BanAction, Config},
-    db::EventsTableTrait,
+    db::{EventsTableTrait, PurgedUsersTableTrait},
 };
 
 /// Send an alert to the moderation room
@@ -59,7 +59,16 @@ pub async fn send_ban_request(bot: &MatrixBot, alert: UserAlert, action: &BanAct
     let Some(event_id) = send_alert(bot, &alert, action, &msg).await else {
         return;
     };
-    bot.send_ok_no_reaction(&event_id).await;
+
+    if let Ok(true) = bot.db.is_layz_purged(&alert.user.username) {
+        bot.moderation_room
+            .send(utils::make_reaction(&event_id, &bot.undo_reaction()))
+            .await
+            .ok();
+    } else {
+        bot.send_ok_no_reaction(&event_id).await;
+    }
+
     if let Err(err) = bot.db.add_event(&event_id, &alert.user.username) {
         tracing::error!("{err}");
     }

@@ -33,6 +33,7 @@ ban_request = """Auf einen aktiven Benutzer trifft eine Regel zu, möchtest du i
 • Grund: %{reason}
 """
 
+undo_success = "Die Löschung wurde erfolgreich rückgängig gemacht"
 ban_success        = "Der Benutzer wurde erfolgreich verbannt ⛔"
 ban_failed         = "Der Benuzter konnte nicht verbannt werden! ⚠️"
 ban_denied         = "Der Benutzer wurde ignoriert"
@@ -48,5 +49,6 @@ purge         = "löschen"
 suspend       = "sperren"
 
 [buttons]
+undo = "rückgängig machen 🔄"
 ban    = "verbannen (%{action}) ⛔"
 ignore = "ignorieren 🆗"

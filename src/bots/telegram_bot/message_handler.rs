@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use redb::Database;
 use teloxide::{
     prelude::*,
     types::{Me, ReplyParameters},
@@ -12,6 +13,7 @@ use teloxide::{
 use crate::{
     bots::telegram_bot::users_handler,
     config::{Config, RegexReason},
+    db::PurgedUsersTableTrait,
     forgejo_api,
 };
 
@@ -36,6 +38,7 @@ pub async fn help_start_handler(bot: &Bot, msg: &Message) -> ResponseResult<()> 
 
 /// Ban command handler
 pub async fn ban_handler(
+    database: &Database,
     config: &Config,
     bot: &Bot,
     msg: &Message,
@@ -86,6 +89,7 @@ pub async fn ban_handler(
                 .into_owned(),
             ),
         ),
+        database.is_layz_purged(&username).is_ok_and(|y| y),
         user,
         config,
     )
@@ -98,6 +102,7 @@ pub async fn text_handler(
     me: Me,
     msg: Message,
     config: Arc<Config>,
+    database: Arc<Database>,
 ) -> ResponseResult<()> {
     if msg.forward_origin().is_some() {
         return Ok(());
@@ -121,7 +126,7 @@ pub async fn text_handler(
                 .data()
                 .is_some_and(|d| d.chat == msg.chat.id) =>
         {
-            ban_handler(&config, &bot, &msg, username).await?
+            ban_handler(&database, &config, &bot, &msg, username).await?
         }
         _ => {}
     };

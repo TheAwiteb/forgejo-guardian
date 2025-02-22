@@ -59,3 +59,20 @@ pub mod inactive {
         7 * 24 * 60 * 60
     }
 }
+
+pub mod lazy_purge {
+    pub const fn interval() -> u32 {
+        // 1 houre
+        60 * 60
+    }
+    pub const fn req_limit() -> u16 {
+        200
+    }
+    pub const fn req_interval() -> u32 {
+        60 * 2
+    }
+    pub const fn purge_after() -> u32 {
+        // 2 houres
+        (60 * 60) * 2
+    }
+}
