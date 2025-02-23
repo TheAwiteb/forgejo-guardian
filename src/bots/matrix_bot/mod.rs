@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, sync::Arc, time::Duration};
 
 use matrix_sdk::{config::SyncSettings, Client as MatrixClient, Room};
 use redb::Database;
@@ -18,6 +18,11 @@ use crate::{
     config::{Config, MatrixData},
     error::{GuardError, GuardResult},
 };
+
+/// Maximum retries for matrix sync
+const MAX_RETRIES: u64 = 10;
+/// Base seconds for the retry interval
+const RETRY_INTERVAL: u64 = 5;
 
 #[derive(Clone)]
 pub struct MatrixBot {
@@ -77,7 +82,8 @@ impl MatrixBot {
 
     /// Run the matrix bot, this will join the moderation room and start
     /// listening to events
-    pub async fn run(self) {
+    pub async fn run(self, cancellation_token: CancellationToken) {
+        let mut retries = 0;
         let client = self.client.clone();
         for room in client.invited_rooms() {
             if room.room_id() == self.moderation_room.room_id() {
@@ -91,8 +97,19 @@ impl MatrixBot {
         client.add_room_event_handler(self.moderation_room.room_id(), Self::on_room_reaction);
         client.add_event_handler_context(self);
 
-        if let Err(err) = client.sync(SyncSettings::default()).await {
-            tracing::error!("Falied to sync the matrix bot: {err}")
+        loop {
+            if cancellation_token.is_cancelled() || retries > MAX_RETRIES {
+                break;
+            }
+
+            if let Err(err) = client.sync(SyncSettings::default()).await {
+                retries += 1;
+                tracing::error!(
+                    "Falied to sync the matrix bot (retries {retries}/{MAX_RETRIES}): {err}"
+                )
+            }
+            tracing::info!("Retrying in {} seconds.", RETRY_INTERVAL * retries);
+            tokio::time::sleep(Duration::from_secs(RETRY_INTERVAL * retries)).await;
         }
     }
 }
@@ -119,10 +136,10 @@ pub async fn start_bot(
     tokio::spawn(users_handler::users_handler(
         bot.clone(),
         config,
-        cancellation_token,
+        cancellation_token.clone(),
         sus_receiver,
         ban_receiver,
     ));
 
-    bot.run().await
+    bot.run(cancellation_token.clone()).await
 }
