@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Lazy purge ([**#55**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/55)) ([`a1d6e20`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a1d6e20eda29fe096dad07fc59635b43090b850b))
 ### Changed
 -  Retry when bot stops ([`19b52ab`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/19b52ab45f52a4d7994a2b7ae12dac4f430b7eb9))
+-  Change the bot message if the ban is immediately or added to the queue ([`3397588`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/3397588c3d6734f243573b5d5c718d23ba673438))
 -  Move `inactive.check_tokens|check_oauth2` to global scope ([**#54**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/54)) ([`a9eb1c9`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a9eb1c9e99acc74b039dc29c03bcf70679141966))
     - **BC**:  Check #54
 -  Sotre last 7 users in updated_users fetcher ([`81b9d0d`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/81b9d0dcb14a86049b77363c2c56cb4112e3f902))
