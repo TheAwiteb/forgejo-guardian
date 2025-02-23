@@ -283,6 +283,7 @@ interval = "7d"
 Expressions configuration section, with the following fields:
 
 -   `check_existing_users`: If set to `true`, the guardian will check the existing users bisides the new users (default: `false`)
+-   `check_sus_existing_users`: If set to `true`, the guardian will check the existing users for the `sus` expressions (default: `false`)
 -   `check_updated_users`: If set to `true`, the guardian will check the updated users (default: `false`)
 -   `safe_mode`: Prevents purge active users immediately. If a user matches the
     ban expressions but is active, a ban request is sent to the moderation team
@@ -330,6 +331,7 @@ Each field is an array of regular expressions, the regular expression can be one
 ```toml
 [expressions]
 check_existing_users = true
+check_sus_existing_users = true
 interval = 40
 limit = 50
 ban_alert = false

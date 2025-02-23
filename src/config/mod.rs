@@ -208,51 +208,54 @@ pub struct Exprs {
     /// Check existing users
     #[serde(default)]
     pub check_existing_users: bool,
+    /// Check the existing users for the `sus` expressions
+    #[serde(default)]
+    pub check_sus_existing_users: bool,
     /// Check updated users also
     #[serde(default)]
-    pub check_updated_users:  bool,
+    pub check_updated_users: bool,
     /// Interval to check for new users in seconds
     #[serde(
         default = "defaults::expressions::interval",
         deserialize_with = "deserializers::suffix_interval"
     )]
-    pub interval:             u32,
+    pub interval: u32,
     /// Limit of users to fetch in each interval
     #[serde(default = "defaults::expressions::limit")]
-    pub limit:                u32,
+    pub limit: u32,
     /// Maximum number of requests to send
     #[serde(
         default = "defaults::expressions::req_limit",
         deserialize_with = "deserializers::unsigned_minimum::<_, _, 1>"
     )]
-    pub req_limit:            u32,
+    pub req_limit: u32,
     /// Interval when hitting the request limit
     #[serde(
         default = "defaults::expressions::req_interval",
         deserialize_with = "deserializers::suffix_interval"
     )]
-    pub req_interval:         u32,
+    pub req_interval: u32,
     /// Action to take when banning a user
     #[serde(default = "defaults::expressions::ban_action")]
-    pub ban_action:           BanAction,
+    pub ban_action: BanAction,
     /// Send an alert when ban a user
     #[serde(default)]
-    pub ban_alert:            bool,
+    pub ban_alert: bool,
     /// Safe mode, if the user is active and the `ban_action` is `purge`, send a
     /// ban request to the moderation team instead of `purge` the user
     #[serde(default)]
-    pub safe_mode:            bool,
+    pub safe_mode: bool,
     /// Direct ban expressions.
     ///
     /// Users are directly banned if any of the expressions are true
     #[serde(default)]
-    pub ban:                  Expr,
+    pub ban: Expr,
     /// Alert expressions.
     ///
     /// Moderators will be notified via Telegram if one of the expressions are
     /// true
     #[serde(default)]
-    pub sus:                  Expr,
+    pub sus: Expr,
 }
 
 /// Lazy purge configuration
@@ -427,16 +430,17 @@ impl Default for Exprs {
     fn default() -> Self {
         Self {
             check_existing_users: false,
-            check_updated_users:  false,
-            ban_alert:            false,
-            safe_mode:            false,
-            interval:             defaults::expressions::interval(),
-            limit:                defaults::expressions::limit(),
-            req_limit:            defaults::expressions::req_limit(),
-            req_interval:         defaults::expressions::req_interval(),
-            ban_action:           defaults::expressions::ban_action(),
-            ban:                  Expr::default(),
-            sus:                  Expr::default(),
+            check_sus_existing_users: false,
+            check_updated_users: false,
+            ban_alert: false,
+            safe_mode: false,
+            interval: defaults::expressions::interval(),
+            limit: defaults::expressions::limit(),
+            req_limit: defaults::expressions::req_limit(),
+            req_interval: defaults::expressions::req_interval(),
+            ban_action: defaults::expressions::ban_action(),
+            ban: Expr::default(),
+            sus: Expr::default(),
         }
     }
 }
