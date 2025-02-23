@@ -384,6 +384,7 @@ pub async fn old_users(
     config: Arc<Config>,
     database: Arc<Database>,
     ban_sender: Sender<UserAlert>,
+    sus_sender: Sender<UserAlert>,
     cancellation_token: CancellationToken,
 ) {
     tracing::info!("Starting old users fetcher");
@@ -445,7 +446,10 @@ pub async fn old_users(
                 &client,
                 &config,
                 true,
-                None,
+                config
+                    .expressions
+                    .check_sus_existing_users
+                    .then_some(&sus_sender),
                 Some(&ban_sender),
             )
             .await;

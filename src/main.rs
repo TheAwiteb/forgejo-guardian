@@ -144,7 +144,7 @@ async fn try_main() -> error::GuardResult<()> {
                 Arc::clone(&config),
                 Arc::clone(&database),
                 cancellation_token.clone(),
-                sus_sender,
+                sus_sender.clone(),
                 ban_sender.clone(),
             ));
         }
@@ -154,6 +154,7 @@ async fn try_main() -> error::GuardResult<()> {
                 Arc::clone(&config),
                 Arc::clone(&database),
                 ban_sender,
+                sus_sender,
                 cancellation_token.clone(),
             ));
         }

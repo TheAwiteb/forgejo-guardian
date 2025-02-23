@@ -30,6 +30,13 @@ fn check_warnings(config: &Config) {
              disabled, the suspicious users will not be alerted"
         );
     }
+
+    if config.expressions.check_sus_existing_users && !config.expressions.check_existing_users {
+        tracing::warn!(
+            "The `check_sus_existing_users` is enabled but the `check_existing_users` is \
+             disabled, the `check_sus_existing_users` will not work"
+        );
+    }
 }
 
 /// Checks for errors in the config
