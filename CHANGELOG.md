@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 -  Move `inactive.check_tokens|check_oauth2` to global scope ([**#54**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/54)) ([`a9eb1c9`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a9eb1c9e99acc74b039dc29c03bcf70679141966))
     - **BC**:  Check #54
+-  Sotre last 7 users in updated_users fetcher ([`81b9d0d`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/81b9d0dcb14a86049b77363c2c56cb4112e3f902))
 ### Fixed
 -  Prevent multiple alerts for the same user update ([`41efebc`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/41efebc5832343a7ec1dfb779c4303ab494cf633))
 
