@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## unreleased
 ### Added
+-  Check the existing users for the `sus` expressions ([**#56**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/56)) ([`dc03365`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/dc0336592e21a22e58c1c0811e7944148a389c32))
 -  Lazy purge ([**#55**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/55)) ([`a1d6e20`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a1d6e20eda29fe096dad07fc59635b43090b850b))
 ### Changed
 -  Move `inactive.check_tokens|check_oauth2` to global scope ([**#54**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/54)) ([`a9eb1c9`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a9eb1c9e99acc74b039dc29c03bcf70679141966))
