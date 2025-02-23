@@ -6,7 +6,8 @@ use redb::{Database, TableDefinition};
 use crate::error::GuardResult;
 
 /// A table containing alerted users, with the username as the key and no value.
-const ALERTED_USERS_TABLE: TableDefinition<&str, ()> = TableDefinition::new("alerted_users");
+pub(super) const ALERTED_USERS_TABLE: TableDefinition<&str, ()> =
+    TableDefinition::new("alerted_users");
 
 #[easy_ext::ext(AlertedUsersTableTrait)]
 impl Database {

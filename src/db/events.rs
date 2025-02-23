@@ -10,7 +10,7 @@ use crate::error::GuardResult;
 
 /// Events table, stores the event id and the username, the key is the event id
 /// and the value is the username.
-const EVENTS_TABLE: TableDefinition<&str, &str> = TableDefinition::new("events");
+pub(super) const EVENTS_TABLE: TableDefinition<&str, &str> = TableDefinition::new("events");
 
 #[easy_ext::ext(EventsTableTrait)]
 impl Database {

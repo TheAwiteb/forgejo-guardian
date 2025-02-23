@@ -17,7 +17,8 @@ use crate::{
 };
 
 /// A table containing purged users, with the username as the key and purged at
-const PURGED_USERS_TABLE: TableDefinition<&str, u64> = TableDefinition::new("purged_users");
+pub(super) const PURGED_USERS_TABLE: TableDefinition<&str, u64> =
+    TableDefinition::new("purged_users");
 
 /// Returns the current timestamp
 fn timestamp_now() -> u64 {

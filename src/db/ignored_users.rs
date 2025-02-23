@@ -6,7 +6,8 @@ use redb::{Database, TableDefinition};
 use crate::error::GuardResult;
 
 /// A table containing ignored users, with the username as the key and no value.
-const IGNORED_USERS_TABLE: TableDefinition<&str, ()> = TableDefinition::new("ignored_users");
+pub(super) const IGNORED_USERS_TABLE: TableDefinition<&str, ()> =
+    TableDefinition::new("ignored_users");
 
 #[easy_ext::ext(IgnoredUsersTableTrait)]
 impl Database {
