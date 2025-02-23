@@ -120,6 +120,9 @@ impl MatrixBot {
                 .is_ok()
             {
                 if bot.config.lazy_purge.enabled {
+                    tracing::info!(
+                        "The moderator {moderator} has added @{username} to purge queue",
+                    );
                     bot.db.add_purged_user(&username).ok();
                     bot.moderation_room
                         .send(utils::make_reaction(
@@ -128,14 +131,13 @@ impl MatrixBot {
                         ))
                         .await
                         .ok();
+                    t!("messages.added_to_purge_queue")
                 } else {
+                    tracing::info!("The moderator {moderator} has banned @{username}",);
                     bot.db.remove_alerted_user(&username).ok();
                     bot.db.remove_user_events(&username).ok();
+                    t!("messages.ban_success")
                 }
-                tracing::info!(
-                    "Moderation team has banned @{username}, the moderator is {moderator}",
-                );
-                t!("messages.ban_success")
             } else {
                 t!("messages.ban_failed")
             };

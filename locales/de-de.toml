@@ -33,14 +33,15 @@ ban_request = """Auf einen aktiven Benutzer trifft eine Regel zu, möchtest du i
 • Grund: %{reason}
 """
 
-undo_success = "Die Löschung wurde erfolgreich rückgängig gemacht"
-ban_success        = "Der Benutzer wurde erfolgreich verbannt ⛔"
-ban_failed         = "Der Benuzter konnte nicht verbannt werden! ⚠️"
-ban_denied         = "Der Benutzer wurde ignoriert"
-ban_command_reason = "Angefordert von %{moderator} mit dem `%{prefix}ban` Befehl"
-can_not_ban_admin  = "Entschuldigung, ich kann keinen Admin verbannen."
-user_not_found     = "Es gibt keinen Benutzer mit diesem Benutzernamen @%{username}"
-hidden             = "Vom Bot-Betreiber versteckt"
+undo_success         = "Die Löschung wurde erfolgreich rückgängig gemacht"
+ban_success          = "Der Benutzer wurde erfolgreich verbannt ⛔"
+added_to_purge_queue = "Der Benutzer wurde erfolgreich zur Warteschlange hinzugefügt ⏳"
+ban_failed           = "Der Benuzter konnte nicht verbannt werden! ⚠️"
+ban_denied           = "Der Benutzer wurde ignoriert"
+ban_command_reason   = "Angefordert von %{moderator} mit dem `%{prefix}ban` Befehl"
+can_not_ban_admin    = "Entschuldigung, ich kann keinen Admin verbannen."
+user_not_found       = "Es gibt keinen Benutzer mit diesem Benutzernamen @%{username}"
+hidden               = "Vom Bot-Betreiber versteckt"
 
 [words]
 not_found     = "nicht gefunden"
@@ -49,6 +50,6 @@ purge         = "löschen"
 suspend       = "sperren"
 
 [buttons]
-undo = "rückgängig machen 🔄"
+undo   = "rückgängig machen 🔄"
 ban    = "verbannen (%{action}) ⛔"
 ignore = "ignorieren 🆗"
