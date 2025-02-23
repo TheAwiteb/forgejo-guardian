@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024-2025 Awiteb <a@4rs.nl>
 
-use std::{
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
 use redb::Database;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, Mutex};
 use tokio::time::sleep as tokio_sleep;
 use tokio_util::sync::CancellationToken;
 
@@ -29,6 +23,8 @@ use crate::{
 const MAX_RETRIES: u8 = 10;
 /// Base seconds for the retry interval
 const RETRY_INTERVAL: u8 = 30;
+/// Users count in recentupdate sort
+const UPDATED_USERS_COUNT: u8 = 7;
 
 /// Get the instance users, the vector may be empty if there are no users
 ///
@@ -37,7 +33,7 @@ const RETRY_INTERVAL: u8 = 30;
 async fn get_users(
     sort: &Sort,
     request_client: &reqwest::Client,
-    last_user_id: usize,
+    last_users_ids: &Mutex<Vec<usize>>,
     config: &Config,
     cancellation_token: CancellationToken,
 ) -> Vec<ForgejoUser> {
@@ -67,22 +63,25 @@ async fn get_users(
         {
             Ok(mut page_users) => {
                 retries = 0;
+                let users_ids_lock = last_users_ids.lock().await;
+                let first_user_id = users_ids_lock.first().unwrap_or(&1);
+
                 match sort {
                     Sort::Newest => {
-                        page_users.retain(|u| u.id > last_user_id);
+                        page_users.retain(|u| &u.id > first_user_id);
                         page_users
                     }
                     Sort::RecentUpdate => {
-                        let is_last_page =
-                            found_last_updated || page_users.iter().any(|u| u.id == last_user_id);
+                        let is_last_page = found_last_updated
+                            || page_users.iter().any(|u| users_ids_lock.contains(&u.id));
                         let page_users: Vec<_> = page_users
                             .into_iter()
-                            .take_while(|u| !found_last_updated && u.id != last_user_id)
+                            .take_while(|u| !found_last_updated && !users_ids_lock.contains(&u.id))
                             .collect();
                         found_last_updated = is_last_page;
                         page_users
                     }
-                    _ => unreachable!("Oldest will not user this function"),
+                    _ => unreachable!("Oldest will not use this function"),
                 }
             }
             Err(err) => {
@@ -112,24 +111,37 @@ async fn get_users(
     users
 }
 
-/// Get the least user id from the instance
-async fn get_least_user_id(
+/// Get the least user id from the instance. This will returns the last 7 users
+/// ids for `recentupdate` sort
+async fn get_least_users_ids(
     sort: &Sort,
     request_client: &reqwest::Client,
     config: &Config,
-) -> GuardResult<usize> {
-    Ok(forgejo_api::get_users(
+) -> GuardResult<Vec<usize>> {
+    let limit = if sort.is_recent_update() {
+        UPDATED_USERS_COUNT
+    } else {
+        1
+    };
+
+    let ids: Vec<_> = forgejo_api::get_users(
         request_client,
         &config.forgejo.instance,
         &config.forgejo.token,
-        1,
+        limit.into(),
         1,
         sort,
     )
     .await?
-    .first()
+    .into_iter()
     .map(|u| u.id)
-    .unwrap_or(1))
+    .collect();
+
+    if ids.is_empty() {
+        return Ok(vec![1]);
+    }
+
+    Ok(ids)
 }
 
 /// Check if the user is protected from being banned
@@ -249,7 +261,7 @@ async fn check_user(
 #[allow(clippy::too_many_arguments)]
 async fn check_users(
     sort: Sort,
-    last_user_id: Arc<AtomicUsize>,
+    last_users_ids: Arc<Mutex<Vec<usize>>>,
     request_client: Arc<reqwest::Client>,
     database: Arc<Database>,
     config: Arc<Config>,
@@ -261,7 +273,7 @@ async fn check_users(
     let users = get_users(
         &sort,
         &request_client,
-        last_user_id.load(Ordering::Relaxed),
+        &last_users_ids,
         &config,
         cancellation_token.clone(),
     )
@@ -271,20 +283,26 @@ async fn check_users(
         return;
     }
 
-    match sort {
-        Sort::Newest => {
-            if let Some(uid) = users.iter().max_by_key(|u| u.id).map(|u| u.id) {
-                tracing::debug!("{sort} last user id: {uid}");
-                last_user_id.store(uid, Ordering::Relaxed);
+    {
+        let mut ids = last_users_ids.lock().await;
+
+        match sort {
+            Sort::Newest => {
+                if let Some(uid) = users.iter().max_by_key(|u| u.id).map(|u| u.id) {
+                    tracing::debug!("{sort} last user id: {uid}");
+                    ids.remove(0);
+                    ids.push(uid);
+                }
             }
+            Sort::RecentUpdate => {
+                *ids = users
+                    .iter()
+                    .map(|u| u.id)
+                    .take(UPDATED_USERS_COUNT.into())
+                    .collect();
+            }
+            _ => unreachable!(),
         }
-        Sort::RecentUpdate => {
-            last_user_id.store(
-                users.first().map(|u| u.id).unwrap_or_default(),
-                Ordering::Relaxed,
-            );
-        }
-        _ => unreachable!(),
     }
 
     for user in users {
@@ -329,13 +347,13 @@ pub async fn users_fetcher(
     ban_sender: Sender<UserAlert>,
 ) {
     let request_client = Arc::new(reqwest::Client::new());
-    let last_user_id = if let Ok(last_id) = get_least_user_id(&sort, &request_client, &config).await
-    {
-        Arc::new(AtomicUsize::new(last_id))
-    } else {
-        tracing::error!("Failed to get {sort} user id");
-        return;
-    };
+    let last_users_ids =
+        if let Ok(last_ids) = get_least_users_ids(&sort, &request_client, &config).await {
+            Arc::new(Mutex::new(last_ids))
+        } else {
+            tracing::error!("Failed to get {sort} user id");
+            return;
+        };
 
     tracing::info!("Starting {sort} users fetcher");
     loop {
@@ -343,7 +361,7 @@ pub async fn users_fetcher(
             _ = tokio::time::sleep(Duration::from_secs(config.expressions.interval.into())) => {
                 tokio::spawn(check_users(
                     sort,
-                    Arc::clone(&last_user_id),
+                    Arc::clone(&last_users_ids),
                     Arc::clone(&request_client),
                     Arc::clone(&database),
                     Arc::clone(&config),
