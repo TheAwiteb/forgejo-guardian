@@ -74,20 +74,21 @@ pub async fn callback_handler(
                 .await
                 .is_ok()
             {
-                if config.lazy_purge.enabled {
-                    database.add_purged_user(data).ok();
-                } else {
-                    database.remove_alerted_user(data).ok();
-                }
-
                 let moderator = callback_query
                     .from
                     .username
                     .map(|u| format!("@{u}"))
                     .unwrap_or_else(|| format!("id={}", callback_query.from.id));
 
-                tracing::info!("Moderation team has banned @{data}, the moderator is {moderator}",);
-                t!("messages.ban_success")
+                if config.lazy_purge.enabled {
+                    tracing::info!("The moderator {moderator} has added @{data} to purge queue",);
+                    database.add_purged_user(data).ok();
+                    t!("messages.added_to_purge_queue")
+                } else {
+                    tracing::info!("The moderator {moderator} has banned @{data}",);
+                    database.remove_alerted_user(data).ok();
+                    t!("messages.ban_success")
+                }
             } else {
                 t!("messages.ban_failed")
             };
