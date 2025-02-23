@@ -20,9 +20,9 @@ use crate::{
 };
 
 /// Maximum retries for fetching the users
-const MAX_RETRIES: u8 = 10;
+const MAX_RETRIES: u64 = 10;
 /// Base seconds for the retry interval
-const RETRY_INTERVAL: u8 = 30;
+const RETRY_INTERVAL: u64 = 30;
 /// Users count in recentupdate sort
 const UPDATED_USERS_COUNT: u8 = 7;
 
@@ -94,7 +94,7 @@ async fn get_users(
                     return users;
                 }
                 tracing::info!("Retrying in {} seconds.", RETRY_INTERVAL * retries);
-                tokio_sleep(Duration::from_secs((RETRY_INTERVAL * retries).into())).await;
+                tokio_sleep(Duration::from_secs(RETRY_INTERVAL * retries)).await;
                 continue;
             }
         };
@@ -421,7 +421,7 @@ pub async fn old_users(
                 return;
             }
             tracing::info!("Retrying in {} seconds.", RETRY_INTERVAL * retries);
-            tokio_sleep(Duration::from_secs((RETRY_INTERVAL * retries).into())).await;
+            tokio_sleep(Duration::from_secs(RETRY_INTERVAL * retries)).await;
             continue;
         };
         retries = 0;
