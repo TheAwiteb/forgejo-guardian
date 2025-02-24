@@ -35,7 +35,7 @@ ban_request = """Auf einen aktiven Benutzer trifft eine Regel zu, möchtest du i
 
 undo_success         = "Die Löschung wurde erfolgreich rückgängig gemacht"
 ban_success          = "Der Benutzer wurde erfolgreich verbannt ⛔"
-added_to_purge_queue = "Der Benutzer wurde erfolgreich zur Warteschlange hinzugefügt ⏳"
+added_to_purge_queue = "Der Benutzer wurde erfolgreich zur Löschwarteschlange hinzugefügt ⏳"
 ban_failed           = "Der Benuzter konnte nicht verbannt werden! ⚠️"
 ban_denied           = "Der Benutzer wurde ignoriert"
 ban_command_reason   = "Angefordert von %{moderator} mit dem `%{prefix}ban` Befehl"
