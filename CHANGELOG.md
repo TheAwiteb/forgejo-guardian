@@ -6,15 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## unreleased
 ### Added
--  A notice if the sus user is active ([**#57**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/57)) ([`5ec36ef`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/5ec36ef4e72049aef2ea149da823dab8b7683e52))
--  Check the existing users for the `sus` expressions ([**#56**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/56)) ([`dc03365`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/dc0336592e21a22e58c1c0811e7944148a389c32))
+-  A notice if the sus user is active ([**#57**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/57)) ([`f67dc54`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f67dc542d45bd64655fed48c74876551f84d190f))
+-  Check the existing users for the `sus` expressions ([**#56**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/56)) ([`72de4e2`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/72de4e2905199b1fbb3372126102eac6c0774a2a))
 -  Lazy purge ([**#55**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/55)) ([`a1d6e20`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a1d6e20eda29fe096dad07fc59635b43090b850b))
 ### Changed
--  Retry when bot stops ([`19b52ab`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/19b52ab45f52a4d7994a2b7ae12dac4f430b7eb9))
--  Change the bot message if the ban is immediately or added to the queue ([`3397588`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/3397588c3d6734f243573b5d5c718d23ba673438))
+-  Retry when Matrix bot stops ([`4f2e487`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/4f2e48746478cead8754aa78f9c7011284ba65d5))
+-  Change the bot message if the ban is immediately or added to the queue ([`8eb6dd8`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/8eb6dd82ef15fe2f76e746dd8bdd82433fd77897))
 -  Move `inactive.check_tokens|check_oauth2` to global scope ([**#54**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/54)) ([`a9eb1c9`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a9eb1c9e99acc74b039dc29c03bcf70679141966))
     - **BC**:  Check #54
--  Sotre last 7 users in updated_users fetcher ([`81b9d0d`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/81b9d0dcb14a86049b77363c2c56cb4112e3f902))
+-  Store last 7 users in `updated_users` fetcher ([`bf2eacf`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/bf2eacf058b2a90987417ec70e2cb80469b1f8d9))
 ### Fixed
 -  Prevent multiple alerts for the same user update ([`41efebc`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/41efebc5832343a7ec1dfb779c4303ab494cf633))
 
