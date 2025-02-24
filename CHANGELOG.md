@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## unreleased
 ### Added
+-  A notice if the sus user is active ([**#57**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/57)) ([`5ec36ef`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/5ec36ef4e72049aef2ea149da823dab8b7683e52))
 -  Check the existing users for the `sus` expressions ([**#56**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/56)) ([`dc03365`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/dc0336592e21a22e58c1c0811e7944148a389c32))
 -  Lazy purge ([**#55**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/55)) ([`a1d6e20`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/a1d6e20eda29fe096dad07fc59635b43090b850b))
 ### Changed
