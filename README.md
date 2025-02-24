@@ -61,7 +61,7 @@ banning the user and the other for ignoring the request, and the bot will listen
 to the reactions and act accordingly.
 
 > [!NOTE]
-> You have to invite the bot to the room before running the guardia
+> You have to invite the bot to the room before running the guardian
 
 #### Commands
 
