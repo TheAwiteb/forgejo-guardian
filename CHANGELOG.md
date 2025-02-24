@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## unreleased
+## [0.7.0](https://git.4rs.nl/awiteb/forgejo-guardian/compare/v0.6.0..v0.7.0) - 2025-02-24
 ### Added
 -  A notice if the sus user is active ([**#57**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/57)) ([`f67dc54`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/f67dc542d45bd64655fed48c74876551f84d190f))
 -  Check the existing users for the `sus` expressions ([**#56**](https://git.4rs.nl/awiteb/forgejo-guardian/issues/56)) ([`72de4e2`](https://git.4rs.nl/awiteb/forgejo-guardian/commit/72de4e2905199b1fbb3372126102eac6c0774a2a))
