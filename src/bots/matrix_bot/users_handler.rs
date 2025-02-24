@@ -33,7 +33,13 @@ async fn send_alert(
 
 /// Send a suspicious alert and add the event to the database
 pub async fn send_sus_alert(bot: &MatrixBot, alert: UserAlert, action: &BanAction) {
-    let Some(event_id) = send_alert(bot, &alert, action, "messages.sus_alert").await else {
+    let msg = if alert.is_active {
+        format!("({}) {}", t!("words.active"), t!("messages.sus_alert"))
+    } else {
+        t!("messages.sus_alert").into_owned()
+    };
+
+    let Some(event_id) = send_alert(bot, &alert, action, &msg).await else {
         return;
     };
     bot.send_ok_no_reaction(&event_id).await;
@@ -93,7 +99,7 @@ pub async fn users_handler(
                 send_sus_alert(&bot, alert, &config.expressions.ban_action).await;
             }
             Some(alert) = ban_receiver.recv() => {
-                if alert.safe_mode {
+                if alert.is_active {
                     send_ban_request(&bot, alert, &config.expressions.ban_action).await;
                 } else {
                     send_ban_notify(&bot, alert, &config.expressions.ban_action).await;

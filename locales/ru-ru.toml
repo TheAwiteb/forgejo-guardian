@@ -44,6 +44,7 @@ user_not_found       = "Пользователь с таким именем по
 hidden               = "Скрыто оператором бота"
 
 [words]
+active        = "Активный"
 not_found     = "Не найдено"
 not_specified = "Не указано"
 purge         = "удалять"

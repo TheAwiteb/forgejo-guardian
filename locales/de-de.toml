@@ -44,6 +44,7 @@ user_not_found       = "Es gibt keinen Benutzer mit diesem Benutzernamen @%{user
 hidden               = "Vom Bot-Betreiber versteckt"
 
 [words]
+active        = "Aktiv"
 not_found     = "nicht gefunden"
 not_specified = "keine Angabe"
 purge         = "löschen"

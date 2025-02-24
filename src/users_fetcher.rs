@@ -8,6 +8,7 @@ use tokio::sync::{mpsc::Sender, Mutex};
 use tokio::time::sleep as tokio_sleep;
 use tokio_util::sync::CancellationToken;
 
+use crate::inactive_users::is_inactive;
 use crate::{
     bots::UserAlert,
     config::Config,
@@ -196,7 +197,7 @@ async fn check_user(
                 database.add_alerted_user(&username).ok();
                 ban_sender
                     .unwrap()
-                    .send(UserAlert::new(user, re).safe_mode())
+                    .send(UserAlert::new(user, re).is_active(true))
                     .await
                     .ok();
             }
@@ -247,11 +248,28 @@ async fn check_user(
     } else if let Some(re) = sus_sender.and(config.expressions.sus.is_match(&user)) {
         tracing::info!("({sort}) @{} has been suspected because `{re}`", username);
         database.add_alerted_user(&username).ok();
+
+        let is_active = config.expressions.active_sus_notice
+            && !is_inactive(
+                request_client,
+                &config.forgejo.instance,
+                &config.forgejo.token,
+                &username,
+                config.check_tokens,
+                config.check_oauth2,
+            )
+            .await
+            .is_ok_and(|i| i);
+
         sus_sender
             .unwrap()
-            .send(UserAlert::new(user, re))
+            .send(UserAlert::new(user, re).is_active(is_active))
             .await
             .ok();
+
+        if config.expressions.active_sus_notice {
+            return 3;
+        }
     }
     0
 }

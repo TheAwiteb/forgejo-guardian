@@ -211,6 +211,9 @@ pub struct Exprs {
     /// Check the existing users for the `sus` expressions
     #[serde(default)]
     pub check_sus_existing_users: bool,
+    /// Add a notice if the sus user is active
+    #[serde(default)]
+    pub active_sus_notice: bool,
     /// Check updated users also
     #[serde(default)]
     pub check_updated_users: bool,
@@ -431,6 +434,7 @@ impl Default for Exprs {
         Self {
             check_existing_users: false,
             check_sus_existing_users: false,
+            active_sus_notice: false,
             check_updated_users: false,
             ban_alert: false,
             safe_mode: false,

@@ -44,6 +44,7 @@ user_not_found       = "لا يوجد مستخدم بهذا الاسم @%{userna
 hidden               = "مخفي من قبل مشغل البوت"
 
 [words]
+active        = "نشط"
 not_found     = "غير موجود"
 not_specified = "غير محدد"
 purge         = "ازالة المستخدم"

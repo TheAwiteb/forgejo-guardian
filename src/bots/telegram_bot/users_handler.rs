@@ -134,7 +134,7 @@ pub async fn users_handler(
                 send_sus_alert(&bot, &telegram, &alert.reason, alert.user, &config).await.ok();
             }
             Some(alert) = ban_receiver.recv() => {
-                if alert.safe_mode {
+                if alert.is_active {
                     send_ban_request(
                         &bot,
                         &telegram,

@@ -44,8 +44,9 @@ pub struct UserAlert {
     user:      ForgejoUser,
     /// The reason why the user has been alerted
     reason:    RegexReason,
-    /// Safe mode is enabled
-    safe_mode: bool,
+    /// Is the user active, for ban this will send a ban request. For sus user
+    /// this will add an active notice
+    is_active: bool,
 }
 
 impl UserAlert {
@@ -54,13 +55,13 @@ impl UserAlert {
         Self {
             user,
             reason,
-            safe_mode: false,
+            is_active: false,
         }
     }
 
-    /// Set a value to the safe mode
-    pub fn safe_mode(mut self) -> Self {
-        self.safe_mode = true;
+    /// Mark the user as active
+    pub fn is_active(mut self, yes: bool) -> Self {
+        self.is_active = yes;
         self
     }
 }

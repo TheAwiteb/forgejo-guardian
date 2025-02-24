@@ -44,7 +44,7 @@ user_not_found       = "There is no user with this username @%{username}"
 hidden               = "Hidden by bot operator"
 
 [words]
-
+active        = "Active"
 not_found     = "Not found"
 not_specified = "Not specified"
 purge         = "purge"
