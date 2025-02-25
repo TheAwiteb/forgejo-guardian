@@ -86,6 +86,7 @@ impl MatrixBot {
         let moderator = event.sender.as_str();
         let reaction = &event.content.relates_to.key;
         let reply_to_event_id = event.content.relates_to.event_id.clone();
+        tracing::info!("The reaction is \"{reaction}\" to {reply_to_event_id} from {moderator}");
         let Some(reply_to_event) = utils::get_msg_event(&room, &reply_to_event_id).await else {
             tracing::error!(
                 "Failed to get the message event from the room for the event {reply_to_event_id} \
