@@ -72,11 +72,14 @@ impl MatrixBot {
         room: Room,
         Ctx(bot): Ctx<MatrixBot>,
     ) {
+        if bot.client.user_id().is_some_and(|u| u == event.sender) {
+            // Reaction from the bot
+            return;
+        }
+
         tracing::info!("Reaction event: {}", event.event_id);
-        if room.state() != RoomState::Joined
-            || bot.client.user_id().is_some_and(|u| u == event.sender)
-        {
-            tracing::error!("The bot is not in the room");
+        if room.state() != RoomState::Joined {
+            tracing::warn!("A reaction event received from a room that the bot removed from");
             return;
         }
 
