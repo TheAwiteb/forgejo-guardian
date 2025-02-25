@@ -72,9 +72,11 @@ impl MatrixBot {
         room: Room,
         Ctx(bot): Ctx<MatrixBot>,
     ) {
+        tracing::info!("Reaction event: {}", event.event_id);
         if room.state() != RoomState::Joined
             || bot.client.user_id().is_some_and(|u| u == event.sender)
         {
+            tracing::error!("The bot is not in the room");
             return;
         }
 
@@ -82,14 +84,19 @@ impl MatrixBot {
         let reaction = &event.content.relates_to.key;
         let reply_to_event_id = event.content.relates_to.event_id.clone();
         let Some(reply_to_event) = utils::get_msg_event(&room, &reply_to_event_id).await else {
+            tracing::error!(
+                "Failed to get the message event from the room for the event {reply_to_event_id} \
+                 by {moderator}"
+            );
             return;
         };
         let Some(msg_text) = utils::get_image_caption(&reply_to_event.content) else {
+            tracing::error!(
+                "Failed to get the image caption from the message event for the event \
+                 {reply_to_event_id} by {moderator}"
+            );
             return;
         };
-        if reply_to_event.sender != bot.client.user_id().expect("already logged") {
-            return;
-        }
 
         let username = match bot.db.get_username(&reply_to_event_id) {
             Ok(Some(username)) => username,
@@ -151,6 +158,8 @@ impl MatrixBot {
         } else if reaction == &bot.ignore_reaction()
             && !bot.db.is_layz_purged(&username).is_ok_and(|y| y)
         {
+            tracing::info!("The moderator {moderator} has ignored @{username}",);
+
             let new_caption = format!("{} ({moderator})\n\n{msg_text}", t!("messages.ban_denied"));
             bot.edit_msg_caption(
                 &reply_to_event_id,
@@ -164,6 +173,7 @@ impl MatrixBot {
         } else if reaction == &bot.undo_reaction()
             && (bot.config.lazy_purge.enabled && bot.db.is_layz_purged(&username).is_ok_and(|y| y))
         {
+            tracing::info!("The moderator {moderator} has undone @{username} purge",);
             let new_caption = format!(
                 "{} ({moderator})\n\n{msg_text}",
                 t!("messages.undo_success")
@@ -196,9 +206,11 @@ impl MatrixBot {
         let moderator = event.sender.as_str();
 
         if text.body == "!ping" {
+            tracing::info!("Moderator {moderator} requested a ping");
             bot.reply_to(&event.event_id, "Pong!").await;
         }
         if let Some(("!ban", username)) = text.body.split_once(" ") {
+            tracing::info!("{moderator} requested a ban request for `@{username}`");
             ban_command_handler(&event.event_id, &bot, moderator, username).await;
         }
     }
