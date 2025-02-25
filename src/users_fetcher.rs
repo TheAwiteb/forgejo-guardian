@@ -177,23 +177,34 @@ async fn check_user(
     sus_sender: Option<&Sender<UserAlert>>,
     ban_sender: Option<&Sender<UserAlert>>,
 ) -> u32 {
-    if let Ok(true) = database.is_ignored(&user.username) {
-        tracing::info!("({sort}) Ignore an ignored user `@{}`", user.username);
-        return 0;
-    }
-
-    if let Ok(true) = database.is_layz_purged(&user.username) {
-        return 0;
-    }
-
     let username = user.username.clone();
+    let (is_ignored, is_alerted, is_lazy_purged) = (
+        database.is_ignored(&username).is_ok_and(|y| y),
+        database.is_alerted(&username).is_ok_and(|y| y),
+        database.is_lazy_purged(&username).is_ok_and(|y| y),
+    );
+
+    if is_ignored || is_alerted || is_lazy_purged {
+        tracing::info!(
+            "({sort}) Skipped {a_an} {reason} user `@{username}`",
+            a_an = if is_lazy_purged { "a" } else { "an" },
+            reason = if is_ignored {
+                "ignored"
+            } else if is_alerted {
+                "alerted"
+            } else {
+                "lazy purged"
+            }
+        );
+        return 0;
+    }
 
     if let Some(re) = config.expressions.ban.is_match(&user) {
         if is_user_protected(request_client, config, &user, &ban_sender)
             .await
             .unwrap_or_default()
         {
-            if !database.is_alerted(&username).is_ok_and(|b| b) {
+            if !is_alerted {
                 database.add_alerted_user(&username).ok();
                 ban_sender
                     .unwrap()
@@ -259,7 +270,7 @@ async fn check_user(
                 config.check_oauth2,
             )
             .await
-            .is_ok_and(|i| i);
+            .is_ok_and(|y| y);
 
         sus_sender
             .unwrap()
@@ -331,11 +342,7 @@ async fn check_users(
             reqs = 0;
         }
 
-        if (sort.is_recent_update() && user.is_new(config.expressions.interval))
-            || (sort.is_recent_update()
-                && config.expressions.ban.is_match(&user).is_none()
-                && database.is_alerted(&user.username).is_ok_and(|b| b))
-            || (user.is_admin)
+        if (sort.is_recent_update() && user.is_new(config.expressions.interval)) || (user.is_admin)
         {
             continue;
         }
@@ -449,6 +456,7 @@ pub async fn old_users(
         }
 
         for user in users {
+            tokio_sleep(Duration::from_secs(2)).await;
             if (reqs + 4) > config.expressions.req_limit || cancellation_token.is_cancelled() {
                 if utils::wait_interval(config.expressions.req_interval, &cancellation_token).await
                 {

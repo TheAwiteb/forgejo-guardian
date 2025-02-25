@@ -66,7 +66,7 @@ pub async fn send_ban_request(bot: &MatrixBot, alert: UserAlert, action: &BanAct
         return;
     };
 
-    if let Ok(true) = bot.db.is_layz_purged(&alert.user.username) {
+    if let Ok(true) = bot.db.is_lazy_purged(&alert.user.username) {
         bot.moderation_room
             .send(utils::make_reaction(&event_id, &bot.undo_reaction()))
             .await

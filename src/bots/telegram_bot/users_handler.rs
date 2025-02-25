@@ -139,7 +139,7 @@ pub async fn users_handler(
                         &bot,
                         &telegram,
                         &alert.reason,
-                        database.is_layz_purged(&alert.user.username).is_ok_and(|y|y),
+                        database.is_lazy_purged(&alert.user.username).is_ok_and(|y|y),
                         alert.user,
                         &config
                     )

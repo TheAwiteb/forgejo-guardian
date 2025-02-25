@@ -60,7 +60,7 @@ pub async fn callback_handler(
 
     match command {
         // Ban
-        "b" if !database.is_layz_purged(data).is_ok_and(|y| y) => {
+        "b" if !database.is_lazy_purged(data).is_ok_and(|y| y) => {
             // ban the user
             let button_text = if config.dry_run
                 || config.lazy_purge.enabled
@@ -113,7 +113,7 @@ pub async fn callback_handler(
             database.remove_alerted_user(data).ok();
         }
         // Undo a purge
-        "u" if config.lazy_purge.enabled && database.is_layz_purged(data).is_ok_and(|y| y) => {
+        "u" if config.lazy_purge.enabled && database.is_lazy_purged(data).is_ok_and(|y| y) => {
             if let Some(MaybeInaccessibleMessage::Regular(msg)) = callback_query.message {
                 bot.edit_message_reply_markup(msg.chat.id, msg.id)
                     .reply_markup(source_inline_keyboard(&t!("messages.undo_success"), None))

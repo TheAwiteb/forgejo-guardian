@@ -89,7 +89,7 @@ pub async fn ban_handler(
                 .into_owned(),
             ),
         ),
-        database.is_layz_purged(&username).is_ok_and(|y| y),
+        database.is_lazy_purged(&username).is_ok_and(|y| y),
         user,
         config,
     )

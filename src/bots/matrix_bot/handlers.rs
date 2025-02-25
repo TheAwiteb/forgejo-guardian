@@ -117,7 +117,7 @@ impl MatrixBot {
             }
         };
 
-        if reaction == &bot.ban_reaction() && !bot.db.is_layz_purged(&username).is_ok_and(|y| y) {
+        if reaction == &bot.ban_reaction() && !bot.db.is_lazy_purged(&username).is_ok_and(|y| y) {
             let ban_status = if bot.config.dry_run
                 || bot.config.lazy_purge.enabled
                 || forgejo_api::ban_user(
@@ -160,7 +160,7 @@ impl MatrixBot {
             )
             .await;
         } else if reaction == &bot.ignore_reaction()
-            && !bot.db.is_layz_purged(&username).is_ok_and(|y| y)
+            && !bot.db.is_lazy_purged(&username).is_ok_and(|y| y)
         {
             tracing::info!("The moderator {moderator} has ignored @{username}",);
 
@@ -175,7 +175,7 @@ impl MatrixBot {
             bot.db.remove_alerted_user(&username).ok();
             bot.db.remove_user_events(&username).ok();
         } else if reaction == &bot.undo_reaction()
-            && (bot.config.lazy_purge.enabled && bot.db.is_layz_purged(&username).is_ok_and(|y| y))
+            && (bot.config.lazy_purge.enabled && bot.db.is_lazy_purged(&username).is_ok_and(|y| y))
         {
             tracing::info!("The moderator {moderator} has undone @{username} purge",);
             let new_caption = format!(

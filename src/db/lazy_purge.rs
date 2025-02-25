@@ -54,7 +54,7 @@ impl Database {
     }
 
     /// Returns `true` if the user is lazy purged
-    pub fn is_layz_purged(&self, username: &str) -> GuardResult<bool> {
+    pub fn is_lazy_purged(&self, username: &str) -> GuardResult<bool> {
         let read_txn = self.begin_read()?;
         let table = read_txn.open_table(PURGED_USERS_TABLE)?;
         Ok(table.get(username).map(|o| o.is_some())?)
