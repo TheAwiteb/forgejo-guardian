@@ -6,12 +6,13 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use redb::{Database, ReadableTable, TableDefinition};
+use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
     config::{BanAction, Config},
     db::{AlertedUsersTableTrait, EventsTableTrait},
-    error::GuardResult,
+    error::{GuardError, GuardResult},
     forgejo_api,
     utils,
 };
@@ -106,8 +107,10 @@ impl Database {
             )
             .await
             {
-                tracing::error!("Failed to lazy purge `@{username}`: {err}");
-                continue;
+                if !matches!(err, GuardError::FailedToBan(StatusCode::NOT_FOUND)) {
+                    tracing::error!("Failed to lazy purge `@{username}`: {err}");
+                    continue;
+                }
             }
 
             self.remove_purged_user(&username).ok();
